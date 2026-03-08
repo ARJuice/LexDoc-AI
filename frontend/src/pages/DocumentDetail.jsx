@@ -1,31 +1,57 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Copy, RefreshCw, Download, ZoomIn, ZoomOut, FileText, Tag, Calendar, User } from 'lucide-react';
 import gsap from 'gsap';
 import {
-    documents, getSummaryByDocId, getDocumentTags, getDocumentUploader,
-    getDocumentDepartments, getTagColor, sortTagsByPriority, getEventsByDocId, formatDate, formatFileSize
-} from '../data/mockData';
+    fetchDocumentById, fetchSummaryByDocId, fetchTags, fetchDepartments, fetchEventsByDocId,
+    getTagColor, sortTagsByPriority, formatDate, formatFileSize
+} from '../lib/supabaseData';
 import './DocumentDetail.css';
 
 export default function DocumentDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const pageRef = useRef(null);
-    const doc = documents.find(d => d.id === Number(id));
-    const summary = doc ? getSummaryByDocId(doc.id) : null;
-    const docTags = doc ? sortTagsByPriority(getDocumentTags(doc)) : [];
-    const docDepts = doc ? getDocumentDepartments(doc) : [];
-    const uploader = doc ? getDocumentUploader(doc) : null;
-    const docEvents = doc ? getEventsByDocId(doc.id) : [];
+
+    const [doc, setDoc] = useState(null);
+    const [summary, setSummary] = useState(null);
+    const [tags, setTags] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [docEvents, setDocEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        async function load() {
+            const [d, s, t, depts, evts] = await Promise.all([
+                fetchDocumentById(Number(id)),
+                fetchSummaryByDocId(Number(id)),
+                fetchTags(),
+                fetchDepartments(),
+                fetchEventsByDocId(Number(id)),
+            ]);
+            setDoc(d); setSummary(s); setTags(t); setDepartments(depts); setDocEvents(evts);
+            setLoading(false);
+        }
+        load();
+    }, [id]);
+
+    const docTags = doc ? sortTagsByPriority((doc.tag_ids || []).map(tid => tags.find(t => t.id === tid)).filter(Boolean)) : [];
+    const docDepts = doc ? (doc.dept_ids || []).map(did => departments.find(d => d.id === did)).filter(Boolean) : [];
+
+    useEffect(() => {
+        if (loading) return;
         const el = pageRef.current;
         if (!el) return;
         gsap.fromTo(el, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
-        gsap.fromTo(el.querySelector('.detail-pdf'), { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.5, delay: 0.2, ease: 'power2.out' });
-        gsap.fromTo(el.querySelector('.detail-ai'), { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.5, delay: 0.3, ease: 'power2.out' });
-    }, [id]);
+        const pdf = el.querySelector('.detail-pdf');
+        const ai = el.querySelector('.detail-ai');
+        if (pdf) gsap.fromTo(pdf, { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.5, delay: 0.2, ease: 'power2.out' });
+        if (ai) gsap.fromTo(ai, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.5, delay: 0.3, ease: 'power2.out' });
+    }, [loading, id]);
+
+    if (loading) {
+        return <div className="page-container"><p style={{ color: 'var(--color-text-muted)' }}>Loading document...</p></div>;
+    }
 
     if (!doc) {
         return (
@@ -78,7 +104,7 @@ export default function DocumentDetail() {
                         {summary ? (
                             <p className="ai-summary-content">{summary.content}</p>
                         ) : (
-                            <p className="ai-no-data">No summary available yet.</p>
+                            <p className="ai-no-data">No summary available yet. AI summary will appear here once generated.</p>
                         )}
                     </div>
 
@@ -117,16 +143,16 @@ export default function DocumentDetail() {
                         <h4>Metadata</h4>
                         <div className="ai-meta-grid">
                             <div className="ai-meta-item">
-                                <span className="ai-meta-label">Uploaded by</span>
-                                <span className="ai-meta-value"><User size={14} /> {uploader?.username}</span>
-                            </div>
-                            <div className="ai-meta-item">
                                 <span className="ai-meta-label">Upload date</span>
                                 <span className="ai-meta-value">{formatDate(doc.uploaded_at)}</span>
                             </div>
                             <div className="ai-meta-item">
                                 <span className="ai-meta-label">File size</span>
                                 <span className="ai-meta-value">{formatFileSize(doc.file_size)}</span>
+                            </div>
+                            <div className="ai-meta-item">
+                                <span className="ai-meta-label">Status</span>
+                                <span className="ai-meta-value">{doc.processing_status}</span>
                             </div>
                             <div className="ai-meta-item">
                                 <span className="ai-meta-label">Department</span>

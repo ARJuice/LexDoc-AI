@@ -1,0 +1,121 @@
+/* ========================================
+   Setup Account Page — LexDoc AI
+   ======================================== */
+
+.setup-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg);
+    padding: var(--space-4);
+    position: relative;
+    overflow: hidden;
+}
+
+.setup-bg-glow {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    filter: blur(140px);
+    opacity: 0.12;
+    pointer-events: none;
+}
+
+.setup-bg-glow.glow-1 {
+    top: -150px;
+    right: -100px;
+    background: var(--color-primary);
+}
+
+.setup-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 480px;
+}
+
+.setup-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-10);
+    box-shadow: var(--shadow-lg);
+}
+
+.setup-header {
+    text-align: center;
+    margin-bottom: var(--space-8);
+}
+
+.setup-header h2 {
+    margin-bottom: var(--space-2);
+}
+
+.setup-header p {
+    color: var(--color-text-secondary);
+    font-size: var(--fs-sm);
+}
+
+.setup-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.setup-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.setup-form label {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.setup-form input,
+.setup-form select {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-size: var(--fs-sm);
+    transition: border-color var(--transition-fast);
+}
+
+.setup-form input:focus,
+.setup-form select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.setup-submit {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    margin-top: var(--space-2);
+}
+
+.setup-error {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--fs-sm);
+    text-align: center;
+    font-weight: 500;
+}
+
+.setup-email-info {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--fs-sm);
+    text-align: center;
+    font-weight: 500;
+}

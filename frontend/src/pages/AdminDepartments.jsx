@@ -1,13 +1,27 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Building2, Plus, Edit2, Trash2 } from 'lucide-react';
 import gsap from 'gsap';
-import { departments, users } from '../data/mockData';
+import { fetchDepartments, fetchUsers } from '../lib/supabaseData';
 import './Admin.css';
 
 export default function AdminDepartments() {
     const pageRef = useRef(null);
 
+    const [departments, setDepartments] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
+        async function load() {
+            const [d, u] = await Promise.all([fetchDepartments(), fetchUsers()]);
+            setDepartments(d); setUsers(u);
+            setLoading(false);
+        }
+        load();
+    }, []);
+
+    useEffect(() => {
+        if (loading) return;
         const el = pageRef.current;
         if (!el) return;
         gsap.fromTo(el, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
@@ -15,7 +29,11 @@ export default function AdminDepartments() {
             { opacity: 0, x: -16 },
             { opacity: 1, x: 0, duration: 0.4, stagger: 0.05, ease: 'power2.out', delay: 0.1 }
         );
-    }, []);
+    }, [loading]);
+
+    if (loading) {
+        return <div className="page-container admin-page"><p style={{ color: 'var(--color-text-muted)' }}>Loading departments...</p></div>;
+    }
 
     return (
         <div ref={pageRef} className="page-container admin-page">

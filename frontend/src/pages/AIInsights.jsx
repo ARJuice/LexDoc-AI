@@ -1,19 +1,36 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Sparkles, TrendingUp, Calendar, AlertTriangle, Clock, FileText, BarChart3 } from 'lucide-react';
 import gsap from 'gsap';
 import {
-    documents, summaries, events, tags,
-    getDocumentTags, formatDate, getDaysUntil
-} from '../data/mockData';
+    fetchDocuments, fetchSummaries, fetchEvents, fetchTags,
+    formatDate, getDaysUntil
+} from '../lib/supabaseData';
 import './AIInsights.css';
 
 export default function AIInsights() {
     const pageRef = useRef(null);
 
+    const [documents, setDocuments] = useState([]);
+    const [summaries, setSummaries] = useState([]);
+    const [events, setEvents] = useState([]);
+    const [tags, setTags] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function load() {
+            const [docs, sums, evts, t] = await Promise.all([
+                fetchDocuments(), fetchSummaries(), fetchEvents(), fetchTags()
+            ]);
+            setDocuments(docs); setSummaries(sums); setEvents(evts); setTags(t);
+            setLoading(false);
+        }
+        load();
+    }, []);
+
     // Most discussed topics = tag frequency
     const tagFreq = {};
     documents.forEach(doc => {
-        doc.tag_ids.forEach(tid => {
+        (doc.tag_ids || []).forEach(tid => {
             tagFreq[tid] = (tagFreq[tid] || 0) + 1;
         });
     });
@@ -29,14 +46,15 @@ export default function AIInsights() {
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 5);
 
-    // High priority docs
-    const highPriorityDocs = documents.filter(d => d.tag_ids.includes(1));
+    // High priority docs (tag_id 1 = HIGH typically, but check dynamically)
+    const priorityTag = tags.find(t => t.type === 'PRIORITY' && t.name?.toUpperCase() === 'HIGH');
+    const highPriorityDocs = priorityTag ? documents.filter(d => (d.tag_ids || []).includes(priorityTag.id)) : [];
 
     // Upcoming events
-    const upcomingEvents = [...events]
-        .sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+    const upcomingEvents = [...events].sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
 
     useEffect(() => {
+        if (loading) return;
         const el = pageRef.current;
         if (!el) return;
         gsap.fromTo(el, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
@@ -44,7 +62,11 @@ export default function AIInsights() {
             { opacity: 0, y: 24 },
             { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'power3.out', delay: 0.2 }
         );
-    }, []);
+    }, [loading]);
+
+    if (loading) {
+        return <div className="page-container"><p style={{ color: 'var(--color-text-muted)' }}>Loading insights...</p></div>;
+    }
 
     return (
         <div ref={pageRef} className="page-container insights-page">
@@ -56,6 +78,7 @@ export default function AIInsights() {
                 <div className="insight-card">
                     <h3><BarChart3 size={18} /> Most Discussed Topics</h3>
                     <div className="tag-bars">
+                        {topTags.length === 0 && <p className="ai-no-data">No tag data yet.</p>}
                         {topTags.map(({ tag, count }) => (
                             <div key={tag.id} className="tag-bar-row">
                                 <span className="tag-bar-label" style={{ color: tag.color }}>{tag.name}</span>
@@ -94,6 +117,9 @@ export default function AIInsights() {
                 <div className="insight-card full-width">
                     <h3><FileText size={18} /> Recent Summaries</h3>
                     <div className="summaries-list">
+                        {recentSummaries.length === 0 && (
+                            <p className="ai-no-data">No summaries generated yet. AI summaries will appear here once the model is connected.</p>
+                        )}
                         {recentSummaries.map(s => {
                             const doc = documents.find(d => d.id === s.doc_id);
                             return (
@@ -113,6 +139,7 @@ export default function AIInsights() {
                 <div className="insight-card full-width">
                     <h3><Calendar size={18} /> Upcoming Deadlines & Events</h3>
                     <div className="events-timeline">
+                        {upcomingEvents.length === 0 && <p className="ai-no-data">No upcoming events.</p>}
                         {upcomingEvents.map(event => {
                             const daysUntil = getDaysUntil(event.event_date);
                             const isPast = daysUntil < 0;

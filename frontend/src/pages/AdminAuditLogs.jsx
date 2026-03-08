@@ -1,13 +1,28 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ClipboardList, Search, FileText, User, Eye, UploadCloud } from 'lucide-react';
 import gsap from 'gsap';
-import { auditLogs, users, documents, formatDateTime } from '../data/mockData';
+import { fetchAuditLogs, fetchUsers, fetchDocuments, formatDateTime } from '../lib/supabaseData';
 import './Admin.css';
 
 export default function AdminAuditLogs() {
     const pageRef = useRef(null);
 
+    const [logs, setLogs] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [documents, setDocuments] = useState([]);
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
+        async function load() {
+            const [l, u, d] = await Promise.all([fetchAuditLogs(), fetchUsers(), fetchDocuments()]);
+            setLogs(l); setUsers(u); setDocuments(d);
+            setLoading(false);
+        }
+        load();
+    }, []);
+
+    useEffect(() => {
+        if (loading) return;
         const el = pageRef.current;
         if (!el) return;
         gsap.fromTo(el, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
@@ -15,9 +30,11 @@ export default function AdminAuditLogs() {
             { opacity: 0, y: 12 },
             { opacity: 1, y: 0, duration: 0.3, stagger: 0.04, ease: 'power2.out', delay: 0.1 }
         );
-    }, []);
+    }, [loading]);
 
-    const logs = [...auditLogs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    if (loading) {
+        return <div className="page-container admin-page"><p style={{ color: 'var(--color-text-muted)' }}>Loading audit logs...</p></div>;
+    }
 
     return (
         <div ref={pageRef} className="page-container admin-page">
@@ -33,6 +50,11 @@ export default function AdminAuditLogs() {
             </div>
 
             <div className="card logs-container">
+                {logs.length === 0 && (
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-sm)', padding: 'var(--space-4)' }}>
+                        No audit logs yet.
+                    </p>
+                )}
                 {logs.map(log => {
                     const user = users.find(u => u.id === log.user_id);
                     const doc = documents.find(d => d.id === log.doc_id);
@@ -45,7 +67,7 @@ export default function AdminAuditLogs() {
                             </div>
                             <div className="log-content">
                                 <div className="log-desc">
-                                    <span className="log-user"><User size={12} /> {user?.username}</span>
+                                    <span className="log-user"><User size={12} /> {user?.username || '—'}</span>
                                     {' '}{isUpload ? 'uploaded' : 'viewed'}{' '}
                                     <span className="log-doc"><FileText size={12} /> {doc?.title || log.details}</span>
                                 </div>

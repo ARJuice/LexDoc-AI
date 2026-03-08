@@ -1,54 +1,94 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Upload, Sparkles, Clock, Calendar, AlertTriangle } from 'lucide-react';
 import gsap from 'gsap';
+import { useAuth } from '../context/AuthProvider';
 import {
-    documents, summaries, events, currentUser,
-    getDocumentTags, getDocumentUploader, getDocumentDepartments,
-    getTagColor, sortTagsByPriority, formatDate, getDaysUntil
-} from '../data/mockData';
+    fetchDocuments, fetchSummaries, fetchEvents,
+    formatDate, getDaysUntil, getTagColor, sortTagsByPriority
+} from '../lib/supabaseData';
 import './Dashboard.css';
 
 export default function Dashboard() {
     const pageRef = useRef(null);
     const navigate = useNavigate();
+    const { profile } = useAuth();
+
+    const [documents, setDocuments] = useState([]);
+    const [summaries, setSummaries] = useState([]);
+    const [events, setEvents] = useState([]);
+    const [tags, setTags] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function load() {
+            const [docs, sums, evts] = await Promise.all([
+                fetchDocuments(),
+                fetchSummaries(),
+                fetchEvents(),
+            ]);
+            // Also fetch tags and departments for display
+            const { fetchTags, fetchDepartments } = await import('../lib/supabaseData');
+            const [t, d] = await Promise.all([fetchTags(), fetchDepartments()]);
+            setDocuments(docs);
+            setSummaries(sums);
+            setEvents(evts);
+            setTags(t);
+            setDepartments(d);
+            setLoading(false);
+        }
+        load();
+    }, []);
 
     const totalDocs = documents.length;
-    const myUploads = documents.filter(d => d.uploader_id === currentUser.id).length;
+    const myUploads = profile ? documents.filter(d => d.uploader_id === profile.id).length : 0;
     const totalSummaries = summaries.length;
     const recentDocs = [...documents].sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at)).slice(0, 5);
     const upcomingEvents = [...events].sort(
         (a, b) => new Date(`${a.event_date}T${a.event_time || '00:00'}`) - new Date(`${b.event_date}T${b.event_time || '00:00'}`)
     );
 
+    // Helper to resolve tags/depts from IDs
+    const getDocTags = (doc) => (doc.tag_ids || []).map(id => tags.find(t => t.id === id)).filter(Boolean);
+    const getDocDepts = (doc) => (doc.dept_ids || []).map(id => departments.find(d => d.id === id)).filter(Boolean);
+    const getUploader = (doc) => doc.uploader_id === profile?.id ? profile : null;
+
     useEffect(() => {
+        if (loading) return;
         const el = pageRef.current;
         if (!el) return;
         gsap.fromTo(el, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
-
-        // Stagger stat cards
         gsap.fromTo(el.querySelectorAll('.stat-card'),
             { opacity: 0, y: 24, scale: 0.96 },
             { opacity: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.1, ease: 'power3.out', delay: 0.15 }
         );
-
-        // Stagger doc rows
         gsap.fromTo(el.querySelectorAll('.doc-row'),
             { opacity: 0, x: -16 },
             { opacity: 1, x: 0, duration: 0.4, stagger: 0.06, ease: 'power2.out', delay: 0.4 }
         );
-
-        // Stagger event items
         gsap.fromTo(el.querySelectorAll('.event-item'),
             { opacity: 0, x: 16 },
             { opacity: 1, x: 0, duration: 0.4, stagger: 0.06, ease: 'power2.out', delay: 0.5 }
         );
-    }, []);
+    }, [loading]);
+
+    const firstName = profile?.username
+        ? profile.username.split('.')[0].charAt(0).toUpperCase() + profile.username.split('.')[0].slice(1)
+        : 'there';
+
+    if (loading) {
+        return (
+            <div className="page-container dashboard">
+                <p style={{ color: 'var(--color-text-muted)' }}>Loading dashboard...</p>
+            </div>
+        );
+    }
 
     return (
         <div ref={pageRef} className="page-container dashboard">
             <h2 className="page-title">Dashboard</h2>
-            <p className="page-subtitle">Welcome back, {currentUser.username.split('.')[0].charAt(0).toUpperCase() + currentUser.username.split('.')[0].slice(1)}</p>
+            <p className="page-subtitle">Welcome back, {firstName}</p>
 
             {/* Stat Cards */}
             <div className="stat-grid">
@@ -81,16 +121,20 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Main content: recent docs + notifications */}
+            {/* Main content: recent docs + events */}
             <div className="dashboard-grid">
                 {/* Recent Documents */}
                 <div className="dashboard-section">
                     <h3 className="section-title">Recent Documents</h3>
                     <div className="doc-list">
+                        {recentDocs.length === 0 && (
+                            <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-sm)', padding: 'var(--space-4)' }}>
+                                No documents yet. Upload one to get started!
+                            </p>
+                        )}
                         {recentDocs.map(doc => {
-                            const uploader = getDocumentUploader(doc);
-                            const docTags = sortTagsByPriority(getDocumentTags(doc));
-                            const docDepts = getDocumentDepartments(doc);
+                            const docTags = sortTagsByPriority(getDocTags(doc));
+                            const docDepts = getDocDepts(doc);
                             return (
                                 <div key={doc.id} className="doc-row card" onClick={() => navigate(`/documents/${doc.id}`)} data-hoverable>
                                     <div className="doc-row-main">
@@ -98,8 +142,6 @@ export default function Dashboard() {
                                         <div>
                                             <div className="doc-row-title">{doc.title}</div>
                                             <div className="doc-row-meta">
-                                                {uploader && <span>{uploader.username}</span>}
-                                                <span>·</span>
                                                 <span>{formatDate(doc.uploaded_at)}</span>
                                                 {docDepts.length > 0 && (
                                                     <><span>·</span><span className="doc-row-dept">{docDepts.map(d => d.name).join(', ')}</span></>
@@ -132,6 +174,11 @@ export default function Dashboard() {
                         <Calendar size={18} /> Upcoming Events & Deadlines
                     </h3>
                     <div className="events-list" data-lenis-prevent>
+                        {upcomingEvents.length === 0 && (
+                            <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--fs-sm)', padding: 'var(--space-4)' }}>
+                                No upcoming events.
+                            </p>
+                        )}
                         {upcomingEvents.map((event, index) => {
                             const daysUntil = getDaysUntil(event.event_date);
                             const isUrgent = daysUntil <= 7;
@@ -155,8 +202,8 @@ export default function Dashboard() {
                                                 {isPast ? 'Overdue' : `${daysUntil}d left`}
                                             </span>
                                         </div>
-                                                </div>
-                                            </div>
+                                    </div>
+                                </div>
                             );
                         })}
                     </div>

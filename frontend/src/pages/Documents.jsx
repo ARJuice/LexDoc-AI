@@ -3,11 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { FileText, Search, Grid3x3, List, ArrowDownUp } from 'lucide-react';
 import gsap from 'gsap';
 import {
-    documents, departments, tags,
-    getDocumentTags, getDocumentUploader, getDocumentDepartments,
-    getSummaryByDocId, getTagColor, sortTagsByPriority,
-    formatDate, formatFileSize
-} from '../data/mockData';
+    fetchDocuments, fetchDepartments, fetchTags, fetchSummaries,
+    getTagColor, sortTagsByPriority, formatDate, formatFileSize
+} from '../lib/supabaseData';
 import './Documents.css';
 
 export default function Documents() {
@@ -19,11 +17,32 @@ export default function Documents() {
     const [sortByDate, setSortByDate] = useState('newest');
     const [viewMode, setViewMode] = useState('grid');
 
+    const [documents, setDocuments] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [tags, setTags] = useState([]);
+    const [summaries, setSummaries] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function load() {
+            const [docs, depts, t, sums] = await Promise.all([
+                fetchDocuments(), fetchDepartments(), fetchTags(), fetchSummaries()
+            ]);
+            setDocuments(docs); setDepartments(depts); setTags(t); setSummaries(sums);
+            setLoading(false);
+        }
+        load();
+    }, []);
+
+    const getDocTags = (doc) => (doc.tag_ids || []).map(id => tags.find(t => t.id === id)).filter(Boolean);
+    const getDocDepts = (doc) => (doc.dept_ids || []).map(id => departments.find(d => d.id === id)).filter(Boolean);
+    const getSummary = (docId) => summaries.find(s => s.doc_id === docId);
+
     const filteredDocs = documents
         .filter(doc => {
             const matchesSearch = doc.title.toLowerCase().includes(search.toLowerCase());
-            const matchesDept = filterDept === 'all' || doc.dept_ids.includes(Number(filterDept)) || doc.is_general;
-            const matchesTag = filterTag === 'all' || doc.tag_ids.includes(Number(filterTag));
+            const matchesDept = filterDept === 'all' || (doc.dept_ids || []).includes(Number(filterDept)) || doc.is_general;
+            const matchesTag = filterTag === 'all' || (doc.tag_ids || []).includes(Number(filterTag));
             return matchesSearch && matchesDept && matchesTag;
         })
         .sort((left, right) => {
@@ -33,19 +52,25 @@ export default function Documents() {
         });
 
     useEffect(() => {
+        if (loading) return;
         const el = pageRef.current;
         if (!el) return;
         gsap.fromTo(el, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
-    }, []);
+    }, [loading]);
 
     useEffect(() => {
+        if (loading) return;
         const el = pageRef.current;
         if (!el) return;
         gsap.fromTo(el.querySelectorAll('.doc-card'),
             { opacity: 0, y: 20, scale: 0.97 },
             { opacity: 1, y: 0, scale: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out' }
         );
-    }, [search, filterDept, filterTag, sortByDate, viewMode]);
+    }, [search, filterDept, filterTag, sortByDate, viewMode, loading]);
+
+    if (loading) {
+        return <div className="page-container"><p style={{ color: 'var(--color-text-muted)' }}>Loading documents...</p></div>;
+    }
 
     return (
         <div ref={pageRef} className="page-container documents-page">
@@ -54,12 +79,7 @@ export default function Documents() {
                 <div className="docs-toolbar">
                     <div className="docs-search">
                         <Search size={16} />
-                        <input
-                            type="text"
-                            placeholder="Search documents..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                        <input type="text" placeholder="Search documents..." value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
                     <select className="docs-filter" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
                         <option value="all">All Departments</option>
@@ -85,10 +105,9 @@ export default function Documents() {
 
             <div className={`docs-grid ${viewMode}`}>
                 {filteredDocs.map(doc => {
-                    const uploader = getDocumentUploader(doc);
-                    const docTags = sortTagsByPriority(getDocumentTags(doc));
-                    const docDepts = getDocumentDepartments(doc);
-                    const summary = getSummaryByDocId(doc.id);
+                    const docTags = sortTagsByPriority(getDocTags(doc));
+                    const docDepts = getDocDepts(doc);
+                    const summary = getSummary(doc.id);
                     return (
                         <div key={doc.id} className="doc-card card" onClick={() => navigate(`/documents/${doc.id}`)} data-hoverable>
                             <div className="doc-card-header">
@@ -98,9 +117,7 @@ export default function Documents() {
                             <h4 className="doc-card-title">{doc.title}</h4>
                             {summary && <p className="doc-card-summary">{summary.content.slice(0, 120)}...</p>}
                             <div className="doc-card-dept">
-                                {docDepts.length > 0
-                                    ? docDepts.map(d => d.name).join(', ')
-                                    : doc.is_general ? 'General' : '—'}
+                                {docDepts.length > 0 ? docDepts.map(d => d.name).join(', ') : doc.is_general ? 'General' : '—'}
                             </div>
                             <div className="doc-card-tags">
                                 {docTags.map(tag => {
@@ -113,7 +130,6 @@ export default function Documents() {
                                 })}
                             </div>
                             <div className="doc-card-footer">
-                                <span>{uploader?.username}</span>
                                 <span>{formatDate(doc.uploaded_at)}</span>
                             </div>
                         </div>

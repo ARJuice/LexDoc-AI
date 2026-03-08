@@ -1,13 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { UploadCloud, FileText, CheckCircle2, Loader2, X, Plus } from 'lucide-react';
 import gsap from 'gsap';
-import { departments, tags } from '../data/mockData';
+import { useAuth } from '../context/AuthProvider';
+import { fetchDepartments, fetchTags, uploadDocument } from '../lib/supabaseData';
 import './Upload.css';
-
-const PROCESS_STAGES = ['uploading', 'extracting', 'summarizing', 'complete'];
-const PRIORITY_TAGS = tags.filter(t => t.type === 'PRIORITY');
-const RECENT_TAGS = tags.filter(t => t.type === 'LABEL').slice(0, 5);
-const PRIORITY_TAG_IDS = PRIORITY_TAGS.map(tag => tag.id);
 
 const extractTitleFromFilename = (filename) => {
     return filename
@@ -20,12 +16,25 @@ const extractTitleFromFilename = (filename) => {
 export default function Upload() {
     const pageRef = useRef(null);
     const progressRef = useRef(null);
+    const { profile } = useAuth();
+
+    const [departments, setDepartments] = useState([]);
+    const [tags, setTags] = useState([]);
     const [dragActive, setDragActive] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [formData, setFormData] = useState({ title: '', dept: '', tags: [], customTags: [], visibility: 'department' });
     const [customTagInput, setCustomTagInput] = useState('');
-    const [processing, setProcessing] = useState(null);
+    const [processing, setProcessing] = useState(null); // null | 'uploading' | 'complete' | 'error'
+    const [uploadError, setUploadError] = useState('');
 
+    useEffect(() => {
+        fetchDepartments().then(setDepartments);
+        fetchTags().then(setTags);
+    }, []);
+
+    const PRIORITY_TAGS = tags.filter(t => t.type === 'PRIORITY');
+    const RECENT_TAGS = tags.filter(t => t.type === 'LABEL').slice(0, 5);
+    const PRIORITY_TAG_IDS = PRIORITY_TAGS.map(tag => tag.id);
     const selectedPriorityId = formData.tags.find(tagId => PRIORITY_TAG_IDS.includes(tagId));
 
     useEffect(() => {
@@ -34,22 +43,33 @@ export default function Upload() {
         gsap.fromTo(el, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
     }, []);
 
-    const simulateUpload = () => {
+    const handleUpload = async () => {
         if (!selectedFile || !formData.title.trim()) return;
-        setProcessing(0);
+        setProcessing('uploading');
+        setUploadError('');
 
-        PROCESS_STAGES.forEach((_, i) => {
-            setTimeout(() => {
-                setProcessing(i);
-                if (progressRef.current) {
-                    gsap.to(progressRef.current, {
-                        width: `${((i + 1) / PROCESS_STAGES.length) * 100}%`,
-                        duration: 0.8,
-                        ease: 'power2.out'
-                    });
-                }
-            }, (i + 1) * 1500);
-        });
+        // Animate progress bar
+        if (progressRef.current) {
+            gsap.to(progressRef.current, { width: '60%', duration: 1.5, ease: 'power2.out' });
+        }
+
+        try {
+            await uploadDocument(selectedFile, {
+                title: formData.title.trim(),
+                deptId: formData.dept || (profile?.dept_id),
+                tagIds: formData.tags,
+                isGeneral: formData.visibility === 'general',
+                uploaderId: profile?.id,
+            });
+
+            if (progressRef.current) {
+                gsap.to(progressRef.current, { width: '100%', duration: 0.5, ease: 'power2.out' });
+            }
+            setProcessing('complete');
+        } catch (err) {
+            setProcessing('error');
+            setUploadError(err.message || 'Upload failed. Please try again.');
+        }
     };
 
     const handleDrop = (e) => {
@@ -58,10 +78,7 @@ export default function Upload() {
         const file = e.dataTransfer?.files?.[0];
         if (file) {
             setSelectedFile(file);
-            setFormData(prev => ({
-                ...prev,
-                title: extractTitleFromFilename(file.name)
-            }));
+            setFormData(prev => ({ ...prev, title: extractTitleFromFilename(file.name) }));
         }
     };
 
@@ -69,10 +86,7 @@ export default function Upload() {
         const file = e.target.files?.[0];
         if (file) {
             setSelectedFile(file);
-            setFormData(prev => ({
-                ...prev,
-                title: extractTitleFromFilename(file.name)
-            }));
+            setFormData(prev => ({ ...prev, title: extractTitleFromFilename(file.name) }));
         }
     };
 
@@ -80,14 +94,10 @@ export default function Upload() {
         if (PRIORITY_TAG_IDS.includes(tagId)) {
             setFormData(prev => {
                 const withoutPriority = prev.tags.filter(tag => !PRIORITY_TAG_IDS.includes(tag));
-                return {
-                    ...prev,
-                    tags: prev.tags.includes(tagId) ? withoutPriority : [...withoutPriority, tagId]
-                };
+                return { ...prev, tags: prev.tags.includes(tagId) ? withoutPriority : [...withoutPriority, tagId] };
             });
             return;
         }
-
         setFormData(prev => ({
             ...prev,
             tags: prev.tags.includes(tagId) ? prev.tags.filter(t => t !== tagId) : [...prev.tags, tagId]
@@ -107,12 +117,6 @@ export default function Upload() {
 
     const handleCustomTagKey = (e) => {
         if (e.key === 'Enter') { e.preventDefault(); addCustomTag(); }
-    };
-
-    const getStageIcon = (stageIdx) => {
-        if (processing === null || processing < stageIdx) return <Loader2 size={16} className="stage-pending" />;
-        if (processing === stageIdx) return <Loader2 size={16} className="stage-active" />;
-        return <CheckCircle2 size={16} className="stage-done" />;
     };
 
     return (
@@ -171,7 +175,6 @@ export default function Upload() {
                         <label>Tags</label>
                         <div className="tags-selection">
                             <div className="tags-columns">
-                                {/* Priority Tags */}
                                 <div className="tags-column">
                                     <span className="tags-column-label">Priority</span>
                                     <div className="tags-column-list">
@@ -189,18 +192,10 @@ export default function Upload() {
                                         ))}
                                     </div>
                                 </div>
-
-                                {/* Custom Tags */}
                                 <div className="tags-column">
                                     <span className="tags-column-label">Custom Tags</span>
                                     <div className="custom-tag-input-row">
-                                        <input
-                                            type="text"
-                                            placeholder="Type a tag..."
-                                            value={customTagInput}
-                                            onChange={(e) => setCustomTagInput(e.target.value)}
-                                            onKeyDown={handleCustomTagKey}
-                                        />
+                                        <input type="text" placeholder="Type a tag..." value={customTagInput} onChange={(e) => setCustomTagInput(e.target.value)} onKeyDown={handleCustomTagKey} />
                                         <button type="button" className="custom-tag-add-btn" onClick={addCustomTag} data-hoverable>
                                             <Plus size={14} />
                                         </button>
@@ -215,8 +210,6 @@ export default function Upload() {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Recently Used Tags */}
                             <div className="tags-recent">
                                 <span className="tags-column-label">Recently Used</span>
                                 <div className="tags-recent-list">
@@ -253,31 +246,29 @@ export default function Upload() {
                         </div>
                     </div>
 
-                    <button className="btn btn-primary upload-submit" onClick={simulateUpload} disabled={!selectedFile || !formData.title.trim()} data-hoverable>
-                        <UploadCloud size={18} /> Upload & Process
+                    <button className="btn btn-primary upload-submit" onClick={handleUpload} disabled={!selectedFile || !formData.title.trim() || processing === 'uploading'} data-hoverable>
+                        <UploadCloud size={18} /> {processing === 'uploading' ? 'Uploading...' : 'Upload & Process'}
                     </button>
                 </div>
             </div>
 
             {/* Processing States */}
-            {processing !== null && (
+            {processing && (
                 <div className="processing-panel">
-                    <h3>Processing Document</h3>
+                    <h3>{processing === 'complete' ? 'Upload Complete' : processing === 'error' ? 'Upload Failed' : 'Uploading Document'}</h3>
                     <div className="progress-bar-track">
-                        <div ref={progressRef} className="progress-bar-fill" />
+                        <div ref={progressRef} className="progress-bar-fill" style={{ width: processing === 'complete' ? '100%' : '0%' }} />
                     </div>
-                    <div className="process-stages">
-                        {PROCESS_STAGES.map((stage, i) => (
-                            <div key={stage} className={`process-stage ${processing >= i ? 'active' : ''} ${processing === i ? 'current' : ''}`}>
-                                {getStageIcon(i)}
-                                <span>{stage.charAt(0).toUpperCase() + stage.slice(1)}</span>
-                            </div>
-                        ))}
-                    </div>
-                    {processing === PROCESS_STAGES.length - 1 && (
+                    {processing === 'complete' && (
                         <div className="process-complete">
                             <CheckCircle2 size={20} />
-                            <span>Document processed successfully! AI summary is ready.</span>
+                            <span>Document uploaded successfully! AI summary will be generated when the model is connected.</span>
+                        </div>
+                    )}
+                    {processing === 'error' && (
+                        <div className="process-complete" style={{ color: 'var(--color-danger)' }}>
+                            <X size={20} />
+                            <span>{uploadError}</span>
                         </div>
                     )}
                 </div>

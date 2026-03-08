@@ -1,13 +1,28 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Users, UserPlus, Edit2, ShieldOff } from 'lucide-react';
 import gsap from 'gsap';
-import { users, roles, departments } from '../data/mockData';
+import { fetchUsers, fetchRoles, fetchDepartments } from '../lib/supabaseData';
 import './Admin.css';
 
 export default function AdminUsers() {
     const pageRef = useRef(null);
 
+    const [users, setUsers] = useState([]);
+    const [roles, setRoles] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
+        async function load() {
+            const [u, r, d] = await Promise.all([fetchUsers(), fetchRoles(), fetchDepartments()]);
+            setUsers(u); setRoles(r); setDepartments(d);
+            setLoading(false);
+        }
+        load();
+    }, []);
+
+    useEffect(() => {
+        if (loading) return;
         const el = pageRef.current;
         if (!el) return;
         gsap.fromTo(el, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
@@ -15,7 +30,11 @@ export default function AdminUsers() {
             { opacity: 0, x: -16 },
             { opacity: 1, x: 0, duration: 0.4, stagger: 0.05, ease: 'power2.out', delay: 0.1 }
         );
-    }, []);
+    }, [loading]);
+
+    if (loading) {
+        return <div className="page-container admin-page"><p style={{ color: 'var(--color-text-muted)' }}>Loading users...</p></div>;
+    }
 
     return (
         <div ref={pageRef} className="page-container admin-page">
@@ -48,17 +67,17 @@ export default function AdminUsers() {
                                 <tr key={u.id}>
                                     <td>
                                         <div className="user-cell">
-                                            <div className="user-avatar">{u.username.charAt(0).toUpperCase()}</div>
+                                            <div className="user-avatar">{u.username?.charAt(0)?.toUpperCase() || '?'}</div>
                                             <div>
-                                                <div className="user-name">{u.username.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')}</div>
-                                                <div className="user-email">{u.email}</div>
+                                                <div className="user-name">{u.username ? u.username.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') : '—'}</div>
+                                                <div className="user-email">{u.email || '—'}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td>{dept?.name || '—'}</td>
                                     <td>
                                         <span className="badge" style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)' }}>
-                                            {role?.name}
+                                            {role?.name || '—'}
                                         </span>
                                     </td>
                                     <td>
