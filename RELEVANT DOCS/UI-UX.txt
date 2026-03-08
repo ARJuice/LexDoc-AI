@@ -1,0 +1,80 @@
+MetroDocAI – Animation & UX Architecture
+Document
+Overview
+This document describes the animation architecture, UX rules, performance strategy, and
+interaction design for the MetroDocAI web application. The system will use GSAP for animation
+control, Lenis for smooth scrolling, and a custom cursor system across the application. The focus of
+the application UI is to maintain productivity while providing modern interaction feedback through
+actionntriggered animations.
+Important Note on Login Page
+The login page will be designed separately using a specialized animation library. For the current
+development phase we will focus only on the main application interface that appears after login.
+Technology Stack for UI Animations
+• GSAP (GreenSock Animation Platform) – main animation engine
+• Lenis – smooth scrolling controller
+• Custom cursor system implemented with GSAP
+• React frontend architecture
+• Dark/Light theme switching API from previous project will be reused
+Global Interaction Systems
+1. Custom Cursor System
+• Replace default browser cursor with custom UI dot ring cursor.
+• Cursor follows mouse with slight delay for smooth motion.
+• Cursor reacts to UI elements such as buttons, cards and links.
+• Cursor size or appearance may change depending on interaction context.
+• Animation smoothing handled using GSAP transform animations.
+2. Smooth Scrolling
+• Use Lenis library for smooth scrolling behavior.
+• Lenis will control scroll interpolation instead of native browser scrolling.
+• Scroll-linked animations can be synchronized with GSAP if required.
+• Ensure smooth scrolling is lightweight and does not block main UI operations.
+Core UI Animation Interactions
+Button Hover Animations
+• Subtle scale effect when hovering over buttons.
+• Optional brightness or color transition.
+• Animation duration should remain short (~0.15–0.25s).
+Card Hover Animations
+• Document cards slightly elevate on hover.
+• Apply small vertical translation and scale increase.
+• Shadow intensity may increase to simulate lift.
+Sidebar Collapse/Expand
+• Sidebar width smoothly animates when collapsed or expanded.
+• Menu labels fade out when collapsed.
+• Icons remain visible for quick navigation.
+Page Transitions
+• Page content fades or slides when navigating between routes.
+• Transitions should be subtle and quick.
+• Prevent large layout shifts during route transitions.
+Modal Open/Close
+• Modal windows appear using scale + fade animation.
+• Backdrop opacity animates during modal activation.
+• Closing animation mirrors opening animation for consistency.
+Upload Progress Animation
+• Upload process displays animated progress bar.
+• Progress bar width updates smoothly using GSAP.
+• Status messages update during stages such as uploading, processing, and summarizing.
+Dark Theme / Light Theme System
+The application will reuse the theme switching API from the previous project. This system allows
+users to toggle between dark mode and light mode dynamically. Theme transitions should use
+smooth color transitions without large flashing effects. Animations must remain readable in both
+themes.
+Performance Optimization Rules
+• Avoid constant background animations inside the main app.
+• Animate only when the user performs an interaction.
+• Use transform and opacity properties for GPU acceleration.
+• Lazy load heavy components such as PDF viewers.
+• Avoid triggering React re-renders for animation state whenever possible.
+• Throttle scroll-based events to avoid performance issues.
+• Keep animation durations short to maintain responsiveness.
+UX Design Principles
+• Animations must support usability rather than distract from tasks.
+• Primary actions must always remain visually clear.
+• Dashboard pages should remain visually calm with minimal motion.
+• Animations should provide feedback for user interactions.
+• Navigation must remain fast and predictable.
+• Consistency across components is critical.
+Development Strategy
+• Implement core animation utilities early in the project.
+• Centralize GSAP animation helpers to avoid duplicated code.
+• Test animations on lowernperformance devices.
+• Ensure accessibility is preserved during animations.
+• Verify that animations do not block important workflows.

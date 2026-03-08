@@ -1,0 +1,258 @@
+.insights-page .title-icon {
+    color: var(--color-primary);
+    vertical-align: middle;
+}
+
+.insights-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5);
+}
+
+.insight-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+}
+
+.insight-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.insight-card h3 {
+    font-size: var(--fs-base);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-5);
+    color: var(--color-text);
+}
+
+/* Tag Bars */
+.tag-bars {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.tag-bar-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.tag-bar-label {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    min-width: 120px;
+    text-align: right;
+}
+
+.tag-bar-track {
+    flex: 1;
+    height: 8px;
+    background: var(--color-border-light);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.tag-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 0.6s ease;
+}
+
+.tag-bar-count {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--color-text-muted);
+    min-width: 20px;
+}
+
+/* Highlights */
+.highlights-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.highlight-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--fs-sm);
+}
+
+.highlight-item.danger {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+.highlight-item.accent {
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+}
+
+.highlight-item.primary {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.highlight-item span {
+    color: var(--color-text);
+}
+
+.highlight-item strong {
+    font-weight: 700;
+}
+
+/* Summaries */
+.summaries-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.summary-item {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-light);
+    transition: border-color var(--transition-fast);
+}
+
+.summary-item:hover {
+    border-color: var(--color-primary);
+}
+
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--space-1);
+}
+
+.summary-doc-title {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.summary-date {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+}
+
+.summary-preview {
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+/* Events Timeline */
+.events-timeline {
+    position: relative;
+    padding-left: var(--space-6);
+}
+
+.events-timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-border);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: var(--space-5);
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: calc(-1 * var(--space-6) + 4px);
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 2px solid var(--color-surface);
+}
+
+.timeline-item.urgent .timeline-dot {
+    background: var(--color-danger);
+}
+
+.timeline-item.past .timeline-dot {
+    background: var(--color-text-muted);
+}
+
+.timeline-content {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+}
+
+.timeline-item.urgent .timeline-content {
+    border-left: 3px solid var(--color-danger);
+}
+
+.timeline-type {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    margin-bottom: 2px;
+}
+
+.timeline-title {
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    color: var(--color-text);
+}
+
+.timeline-desc {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-2);
+}
+
+.timeline-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+}
+
+.countdown-pill {
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: 10px;
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+}
+
+.countdown-pill.urgent {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+.countdown-pill.overdue {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}

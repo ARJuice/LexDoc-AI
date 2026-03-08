@@ -1,0 +1,225 @@
+.upload-page .page-subtitle {
+    margin-bottom: var(--space-6);
+}
+
+.upload-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    margin-bottom: var(--space-6);
+}
+
+/* Drop Zone */
+.upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-12);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    gap: var(--space-3);
+    text-align: center;
+    transition: all var(--transition-base);
+    min-height: 300px;
+}
+
+.upload-zone:hover,
+.upload-zone.active {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.upload-zone.has-file {
+    border-style: solid;
+    border-color: var(--color-primary);
+}
+
+.upload-zone span {
+    font-size: var(--fs-sm);
+}
+
+.upload-zone-selected {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-primary);
+}
+
+.upload-zone-filename {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.upload-zone-size {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+}
+
+/* Form */
+.upload-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.form-group label {
+    display: block;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-2);
+}
+
+.form-group input[type="text"],
+.form-group select {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--fs-sm);
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.form-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.form-tag {
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+    transition: all var(--transition-fast);
+}
+
+.form-tag.selected {
+    font-weight: 600;
+}
+
+.form-radio-group {
+    display: flex;
+    gap: var(--space-4);
+}
+
+.form-radio {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-sm);
+    color: var(--color-text);
+}
+
+.form-radio input[type="radio"] {
+    accent-color: var(--color-primary);
+}
+
+.upload-submit {
+    align-self: flex-start;
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--fs-base);
+}
+
+.upload-submit:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Processing Panel */
+.processing-panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+}
+
+.processing-panel h3 {
+    margin-bottom: var(--space-4);
+}
+
+.progress-bar-track {
+    height: 6px;
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-bottom: var(--space-4);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--color-primary), #059669);
+    border-radius: var(--radius-full);
+    transition: width 0.3s ease;
+}
+
+.process-stages {
+    display: flex;
+    gap: var(--space-6);
+    margin-bottom: var(--space-4);
+}
+
+.process-stage {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-sm);
+    color: var(--color-text-muted);
+}
+
+.process-stage.active {
+    color: var(--color-text);
+}
+
+.process-stage.current {
+    color: var(--color-primary);
+}
+
+.stage-pending {
+    opacity: 0.3;
+}
+
+.stage-active {
+    animation: spin 1s linear infinite;
+    color: var(--color-primary);
+}
+
+.stage-done {
+    color: var(--color-primary);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.process-complete {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-radius: var(--radius-md);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+}

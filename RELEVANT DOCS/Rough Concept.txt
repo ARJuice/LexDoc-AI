@@ -1,0 +1,207 @@
+1️⃣ Core Concept of the App
+Your system is not just a document storage system.
+It is:
+AI-powered organizational knowledge platform
+Users come here to:
+1. Upload internal documents
+2. Read AI summaries quickly
+3. Search documents across departments
+4. Understand key insights
+So the UX must prioritize:
+Search → Read → Understand NOT Upload → Store → Forget
+2️⃣ User Roles (From Your Schema)
+From your schema:
+Revised_AI_Summarizer_Schema_Up…
+Roles:
+Admin Manager Employee
+Access rules:
+Role
+Capabilities
+Admin
+full control
+Manager
+department documents
+Employee
+limited visibility
+UX must hide irrelevant features.
+3️⃣ Global Layout (Entire App)
+Clean SaaS layout:
+----------------------------------------- | Sidebar | Topbar | | |-----------------------------| | | | | | Page Content | | | | -----------------------------------------
+Sidebar (Primary Navigation)
+Dashboard Documents Upload AI Insights --------- Admin (only admin) Users Departments Audit Logs --------- Profile Logout
+4️⃣ Complete Page Structure
+This is the final recommended page architecture.
+/login /dashboard /documents /documents/:id /upload /insights /admin/users /admin/departments /admin/audit /profile
+Minimal. Logical.
+5️⃣ PAGE-BY-PAGE UX DESIGN
+Now we go page by page.
+1️. Login Page
+Purpose: User authentication.
+Layout
+Center card.
+Fields:
+Email Password Login button
+Optional:
+Forgot password
+UI Behavior
+• Clean
+• Fast
+• Minimal
+No animations except fade.
+2️. Dashboard (Home)
+Purpose:
+Overview of the organization knowledge.
+This is not a document list.
+Layout
+Top:
+Search Bar Upload Button
+Below:
+3 overview cards:
+Total Documents My Uploads Recent Summaries Generated
+Below:
+Recent Documents
+Each document card shows:
+Title Department Tags Summary preview (2 lines) Upload date
+Click → opens Document Detail
+3️. Documents Page
+Purpose:
+Browse and search all accessible documents.
+Layout
+Left panel:
+Filters
+Department Tags Uploader Date range
+Main section:
+Document grid/list
+Each card:
+Title Tags
+Department AI Summary preview Uploaded by Date
+Top bar:
+Search field Sort dropdown
+4️. Document Detail Page
+This is the most important page.
+Layout
+Split screen.
+----------------------------------------- | PDF Viewer | AI Summary | | | | | | Key Insights | | | Tags | | | Metadata | -----------------------------------------
+Left Panel
+PDF Viewer.
+Lazy loaded.
+Functions:
+Zoom Page navigation Download
+Right Panel
+AI Panel.
+Sections:
+Summary Key Points
+Tags Metadata
+Buttons:
+Regenerate summary Copy summary
+5️. Upload Page
+Purpose:
+Upload + metadata.
+Layout
+Top:
+Drag & Drop Upload
+Below:
+Metadata form.
+Title Department Tags Visibility
+Visibility:
+General Department specific
+Submit → upload.
+After Upload
+Show processing states.
+Uploading Extracting text Generating summary Completed- shows preview of AI summary then and there itself in a clean UI/UX with perfect animations
+6. AI Insights Page
+This makes the project look advanced.
+Purpose:
+AI-powered document intelligence.
+Sections
+Most Discussed Topics
+Shows:
+Top tags
+Recent Summaries
+List:
+Document title Summary preview Generated time
+AI Highlights
+Example:
+High priority documents Recently uploaded Department trends
+7. Admin Panel
+Visible only for admin.
+Admin → Users
+Table:
+Name Email Department Role Actions
+Actions:
+Edit role Deactivate user
+Admin → Departments
+Table:
+Department Name Code
+Actions:
+Create Edit Delete
+Admin → Audit Logs
+List:
+User Action Document Timestamp
+Example:
+John uploaded document Mary viewed document Admin changed role
+8. Profile Page
+Simple.
+Name Email Department Role
+Buttons:
+Logout Change password
+6⃣ User Journey (How Users Use It)
+This is extremely important for UX clarity.
+Typical Employee Flow
+1️⃣ Login
+↓
+2️⃣ Dashboard
+Sees:
+recent documents search bar
+↓
+3️⃣ Search document
+↓
+4️⃣ Open document
+↓
+5️⃣ Read AI summary
+↓
+6️⃣ Download if needed
+Manager Flow
+1️⃣ Login
+↓
+2️⃣ Dashboard
+↓
+3️⃣ Upload department document
+↓
+4️⃣ AI generates summary
+↓
+5️⃣ Team accesses it
+Admin Flow
+1️⃣ Login
+↓
+2️⃣ Admin Panel
+↓
+3️⃣ Create departments
+↓
+4️⃣ Manage users
+↓
+5️⃣ View audit logs
+7⃣ AI Workflow (Internal)
+When user uploads:
+Upload document ↓ Store in Supabase storage ↓ Extract text ↓
+Send to AI service ↓ Chunk document ↓ Generate summaries ↓ Combine summaries ↓ Store final summary ↓ Display to users
+Matches your architecture:
+Revised_AI_Summarizer_Schema_Up…
+.
+8⃣ Clean Frontend Folder Structure
+Your previous one was messy.
+Use this:
+src app router.jsx modules auth pages components api documents pages components api upload pages components summary components api admin pages components components layout ui
+services supabase api hooks utils
+9️⃣ Key UX Improvements vs Your Old Project
+Old project problems:
+Too many pages AI not central Upload separated from workflow Dashboard useless
+New design:
+Dashboard = overview Documents = exploration Detail page = AI center Upload = workflow entry Insights = AI intelligence Admin = system control
+Clean.
+Final Advice (Very Important)
+Do NOT try to build:
+Chatbot Realtime notifications Complex analytics
+Focus on:
+Search AI summaries Clear documents Access control
+That’s enough for a production-quality academic project.
