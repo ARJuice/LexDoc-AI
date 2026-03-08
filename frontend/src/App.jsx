@@ -15,6 +15,7 @@ import AdminUsers from './pages/AdminUsers';
 import AdminDepartments from './pages/AdminDepartments';
 import AdminAuditLogs from './pages/AdminAuditLogs';
 import Profile from './pages/Profile';
+import MyUploads from './pages/MyUploads';
 
 function App() {
   const isDark = useSelector((s) => s.theme.isDark);
@@ -37,6 +38,7 @@ function App() {
               <Route path="/documents" element={<Documents />} />
               <Route path="/documents/:id" element={<DocumentDetail />} />
               <Route path="/upload" element={<Upload />} />
+              <Route path="/my-uploads" element={<MyUploads />} />
               <Route path="/insights" element={<AIInsights />} />
 
               <Route path="/admin/users" element={<AdminUsers />} />

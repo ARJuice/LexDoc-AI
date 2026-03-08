@@ -1,4 +1,5 @@
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Search } from 'lucide-react';
 import ThemeToggle from '../ui/ThemeToggle';
 import { setPanelOpen } from '../../store/store';
@@ -8,6 +9,7 @@ import './TopBar.css';
 export default function TopBar() {
     const unreadCount = useSelector((s) => s.notifications.unreadCount);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     return (
         <header className="topbar">
@@ -35,7 +37,7 @@ export default function TopBar() {
                     )}
                 </button>
 
-                <div className="topbar-user" data-hoverable>
+                <div className="topbar-user" data-hoverable onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
                     <div className="topbar-avatar">
                         {currentUser.username.charAt(0).toUpperCase()}
                     </div>

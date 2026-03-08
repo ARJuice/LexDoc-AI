@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toggleSidebar } from '../../store/store';
 import {
     LayoutDashboard, FileText, Upload, Sparkles, Users, Building2,
-    ClipboardList, User, LogOut, ChevronLeft, ChevronRight
+    ClipboardList, User, LogOut, ChevronLeft, ChevronRight, FolderUp
 } from 'lucide-react';
 import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
@@ -13,6 +13,7 @@ const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/documents', label: 'Documents', icon: FileText },
     { path: '/upload', label: 'Upload', icon: Upload },
+    { path: '/my-uploads', label: 'My Uploads', icon: FolderUp },
     { path: '/insights', label: 'AI Insights', icon: Sparkles },
     { divider: true },
     { path: '/admin/users', label: 'Users', icon: Users, admin: true },
