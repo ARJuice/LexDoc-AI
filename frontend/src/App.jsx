@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import AppLayout from './components/layout/AppLayout';
@@ -18,8 +19,14 @@ import Profile from './pages/Profile';
 function App() {
   const isDark = useSelector((s) => s.theme.isDark);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    localStorage.setItem('lexdoc-theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
+
   return (
-    <div className={isDark ? 'dark' : ''}>
+    <div>
       <SmoothScroll>
         <CustomCursor />
         <BrowserRouter>

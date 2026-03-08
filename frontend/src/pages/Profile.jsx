@@ -64,7 +64,7 @@ export default function Profile() {
                             <Shield size={18} className="detail-icon" />
                             <div>
                                 <label>System Role</label>
-                                <p>{role?.name} (Access Level: {role?.access_level})</p>
+                                <p>{role?.name}</p>
                             </div>
                         </div>
                     </div>

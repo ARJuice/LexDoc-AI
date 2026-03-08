@@ -4,8 +4,8 @@ import { FileText, Upload, Sparkles, Clock, Calendar, AlertTriangle } from 'luci
 import gsap from 'gsap';
 import {
     documents, summaries, events, currentUser,
-    getDocumentTags, getDocumentUploader, getDeptById,
-    formatDate, getDaysUntil
+    getDocumentTags, getDocumentUploader, getDocumentDepartments,
+    getTagColor, sortTagsByPriority, formatDate, getDaysUntil
 } from '../data/mockData';
 import './Dashboard.css';
 
@@ -17,7 +17,9 @@ export default function Dashboard() {
     const myUploads = documents.filter(d => d.uploader_id === currentUser.id).length;
     const totalSummaries = summaries.length;
     const recentDocs = [...documents].sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at)).slice(0, 5);
-    const upcomingEvents = [...events].sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+    const upcomingEvents = [...events].sort(
+        (a, b) => new Date(`${a.event_date}T${a.event_time || '00:00'}`) - new Date(`${b.event_date}T${b.event_time || '00:00'}`)
+    );
 
     useEffect(() => {
         const el = pageRef.current;
@@ -87,7 +89,8 @@ export default function Dashboard() {
                     <div className="doc-list">
                         {recentDocs.map(doc => {
                             const uploader = getDocumentUploader(doc);
-                            const docTags = getDocumentTags(doc);
+                            const docTags = sortTagsByPriority(getDocumentTags(doc));
+                            const docDepts = getDocumentDepartments(doc);
                             return (
                                 <div key={doc.id} className="doc-row card" onClick={() => navigate(`/documents/${doc.id}`)} data-hoverable>
                                     <div className="doc-row-main">
@@ -98,15 +101,24 @@ export default function Dashboard() {
                                                 {uploader && <span>{uploader.username}</span>}
                                                 <span>·</span>
                                                 <span>{formatDate(doc.uploaded_at)}</span>
+                                                {docDepts.length > 0 && (
+                                                    <><span>·</span><span className="doc-row-dept">{docDepts.map(d => d.name).join(', ')}</span></>
+                                                )}
+                                                {doc.is_general && !docDepts.length && (
+                                                    <><span>·</span><span className="doc-row-dept">General</span></>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="doc-row-tags">
-                                        {docTags.map(tag => (
-                                            <span key={tag.id} className="tag-chip" style={{ borderColor: tag.color, color: tag.color }}>
-                                                {tag.name}
-                                            </span>
-                                        ))}
+                                        {docTags.map(tag => {
+                                            const color = getTagColor(tag);
+                                            return (
+                                                <span key={tag.id} className={`tag-chip ${tag.type === 'PRIORITY' ? 'tag-priority' : ''}`} style={{ borderColor: color, color }}>
+                                                    {tag.name}
+                                                </span>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             );
@@ -119,26 +131,32 @@ export default function Dashboard() {
                     <h3 className="section-title">
                         <Calendar size={18} /> Upcoming Events & Deadlines
                     </h3>
-                    <div className="events-list">
-                        {upcomingEvents.map(event => {
+                    <div className="events-list" data-lenis-prevent>
+                        {upcomingEvents.map((event, index) => {
                             const daysUntil = getDaysUntil(event.event_date);
                             const isUrgent = daysUntil <= 7;
                             const isPast = daysUntil < 0;
                             return (
-                                <div key={event.id} className={`event-item ${isUrgent ? 'urgent' : ''} ${isPast ? 'past' : ''}`}>
-                                    <div className="event-type-badge">
-                                        {event.event_type === 'DEADLINE' ? <AlertTriangle size={14} /> : <Clock size={14} />}
-                                        <span>{event.event_type}</span>
+                                <div key={event.id} className={`event-row ${isPast ? 'past' : ''}`}>
+                                    <div className="event-rail" aria-hidden="true">
+                                        <span className="event-timeline-dot"></span>
+                                        {index < upcomingEvents.length - 1 && <span className="event-timeline-line"></span>}
                                     </div>
-                                    <div className="event-title">{event.title}</div>
-                                    <div className="event-description">{event.description}</div>
-                                    <div className="event-footer">
-                                        <span className="event-date">{formatDate(event.event_date)}</span>
-                                        <span className={`event-countdown ${isUrgent ? 'badge-danger' : 'badge-accent'}`}>
-                                            {isPast ? 'Overdue' : `${daysUntil}d left`}
-                                        </span>
-                                    </div>
-                                </div>
+                                    <div className={`event-item ${isUrgent ? 'urgent' : ''} ${isPast ? 'past' : ''}`}>
+                                        <div className="event-type-badge">
+                                            {event.event_type === 'DEADLINE' ? <AlertTriangle size={14} /> : <Clock size={14} />}
+                                            <span>{event.event_type}</span>
+                                        </div>
+                                        <div className="event-title">{event.title}</div>
+                                        <div className="event-description">{event.description}</div>
+                                        <div className="event-footer">
+                                            <span className="event-date">{formatDate(event.event_date)}</span>
+                                            <span className={`event-countdown ${isUrgent ? 'badge-danger' : 'badge-accent'}`}>
+                                                {isPast ? 'Overdue' : `${daysUntil}d left`}
+                                            </span>
+                                        </div>
+                                                </div>
+                                            </div>
                             );
                         })}
                     </div>

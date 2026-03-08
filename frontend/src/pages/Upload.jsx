@@ -1,18 +1,32 @@
 import { useEffect, useRef, useState } from 'react';
-import { UploadCloud, FileText, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, Loader2, X, Plus } from 'lucide-react';
 import gsap from 'gsap';
 import { departments, tags } from '../data/mockData';
 import './Upload.css';
 
 const PROCESS_STAGES = ['uploading', 'extracting', 'summarizing', 'complete'];
+const PRIORITY_TAGS = tags.filter(t => t.type === 'PRIORITY');
+const RECENT_TAGS = tags.filter(t => t.type === 'LABEL').slice(0, 5);
+const PRIORITY_TAG_IDS = PRIORITY_TAGS.map(tag => tag.id);
+
+const extractTitleFromFilename = (filename) => {
+    return filename
+        .replace(/\.[^.]+$/, '')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+};
 
 export default function Upload() {
     const pageRef = useRef(null);
     const progressRef = useRef(null);
     const [dragActive, setDragActive] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
-    const [formData, setFormData] = useState({ title: '', dept: '', tags: [], visibility: 'department' });
-    const [processing, setProcessing] = useState(null); // null | stage index
+    const [formData, setFormData] = useState({ title: '', dept: '', tags: [], customTags: [], visibility: 'department' });
+    const [customTagInput, setCustomTagInput] = useState('');
+    const [processing, setProcessing] = useState(null);
+
+    const selectedPriorityId = formData.tags.find(tagId => PRIORITY_TAG_IDS.includes(tagId));
 
     useEffect(() => {
         const el = pageRef.current;
@@ -21,7 +35,7 @@ export default function Upload() {
     }, []);
 
     const simulateUpload = () => {
-        if (!selectedFile) return;
+        if (!selectedFile || !formData.title.trim()) return;
         setProcessing(0);
 
         PROCESS_STAGES.forEach((_, i) => {
@@ -42,19 +56,57 @@ export default function Upload() {
         e.preventDefault();
         setDragActive(false);
         const file = e.dataTransfer?.files?.[0];
-        if (file) setSelectedFile(file);
+        if (file) {
+            setSelectedFile(file);
+            setFormData(prev => ({
+                ...prev,
+                title: extractTitleFromFilename(file.name)
+            }));
+        }
     };
 
     const handleFileInput = (e) => {
         const file = e.target.files?.[0];
-        if (file) setSelectedFile(file);
+        if (file) {
+            setSelectedFile(file);
+            setFormData(prev => ({
+                ...prev,
+                title: extractTitleFromFilename(file.name)
+            }));
+        }
     };
 
     const toggleTag = (tagId) => {
+        if (PRIORITY_TAG_IDS.includes(tagId)) {
+            setFormData(prev => {
+                const withoutPriority = prev.tags.filter(tag => !PRIORITY_TAG_IDS.includes(tag));
+                return {
+                    ...prev,
+                    tags: prev.tags.includes(tagId) ? withoutPriority : [...withoutPriority, tagId]
+                };
+            });
+            return;
+        }
+
         setFormData(prev => ({
             ...prev,
             tags: prev.tags.includes(tagId) ? prev.tags.filter(t => t !== tagId) : [...prev.tags, tagId]
         }));
+    };
+
+    const addCustomTag = () => {
+        const trimmed = customTagInput.trim();
+        if (!trimmed || formData.customTags.includes(trimmed)) return;
+        setFormData(prev => ({ ...prev, customTags: [...prev.customTags, trimmed] }));
+        setCustomTagInput('');
+    };
+
+    const removeCustomTag = (tagName) => {
+        setFormData(prev => ({ ...prev, customTags: prev.customTags.filter(t => t !== tagName) }));
+    };
+
+    const handleCustomTagKey = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addCustomTag(); }
     };
 
     const getStageIcon = (stageIdx) => {
@@ -100,6 +152,7 @@ export default function Upload() {
                         <label>Document Title</label>
                         <input
                             type="text"
+                            required
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             placeholder="Enter document title..."
@@ -116,37 +169,91 @@ export default function Upload() {
 
                     <div className="form-group">
                         <label>Tags</label>
-                        <div className="form-tags">
-                            {tags.map(t => (
-                                <button
-                                    key={t.id}
-                                    className={`form-tag ${formData.tags.includes(t.id) ? 'selected' : ''}`}
-                                    style={formData.tags.includes(t.id) ? { borderColor: t.color, color: t.color, background: t.color + '15' } : {}}
-                                    onClick={() => toggleTag(t.id)}
-                                    data-hoverable
-                                    type="button"
-                                >
-                                    {t.name}
-                                </button>
-                            ))}
+                        <div className="tags-selection">
+                            <div className="tags-columns">
+                                {/* Priority Tags */}
+                                <div className="tags-column">
+                                    <span className="tags-column-label">Priority</span>
+                                    <div className="tags-column-list">
+                                        {PRIORITY_TAGS.map(t => (
+                                            <button
+                                                key={t.id}
+                                                className={`form-tag ${selectedPriorityId === t.id ? 'selected' : ''}`}
+                                                style={selectedPriorityId === t.id ? { borderColor: t.color, color: t.color, background: t.color + '15' } : {}}
+                                                onClick={() => toggleTag(t.id)}
+                                                data-hoverable
+                                                type="button"
+                                            >
+                                                {t.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Custom Tags */}
+                                <div className="tags-column">
+                                    <span className="tags-column-label">Custom Tags</span>
+                                    <div className="custom-tag-input-row">
+                                        <input
+                                            type="text"
+                                            placeholder="Type a tag..."
+                                            value={customTagInput}
+                                            onChange={(e) => setCustomTagInput(e.target.value)}
+                                            onKeyDown={handleCustomTagKey}
+                                        />
+                                        <button type="button" className="custom-tag-add-btn" onClick={addCustomTag} data-hoverable>
+                                            <Plus size={14} />
+                                        </button>
+                                    </div>
+                                    <div className="custom-tags-list">
+                                        {formData.customTags.map(ct => (
+                                            <span key={ct} className="custom-tag-chip">
+                                                {ct}
+                                                <button type="button" onClick={() => removeCustomTag(ct)} data-hoverable><X size={12} /></button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Recently Used Tags */}
+                            <div className="tags-recent">
+                                <span className="tags-column-label">Recently Used</span>
+                                <div className="tags-recent-list">
+                                    {RECENT_TAGS.map(t => (
+                                        <button
+                                            key={t.id}
+                                            className={`form-tag ${formData.tags.includes(t.id) ? 'selected' : ''}`}
+                                            style={formData.tags.includes(t.id) ? { borderColor: 'var(--color-primary)', color: 'var(--color-primary)', background: 'var(--color-primary-light)' } : {}}
+                                            onClick={() => toggleTag(t.id)}
+                                            data-hoverable
+                                            type="button"
+                                        >
+                                            {t.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div className="form-group">
                         <label>Visibility</label>
                         <div className="form-radio-group">
-                            <label className="form-radio">
+                            <label className="form-radio" data-hoverable>
                                 <input type="radio" name="visibility" value="department" checked={formData.visibility === 'department'} onChange={() => setFormData({ ...formData, visibility: 'department' })} />
+                                <span className="radio-custom"></span>
                                 <span>Department Only</span>
                             </label>
-                            <label className="form-radio">
+                            <label className="form-radio" data-hoverable>
                                 <input type="radio" name="visibility" value="general" checked={formData.visibility === 'general'} onChange={() => setFormData({ ...formData, visibility: 'general' })} />
+                                <span className="radio-custom"></span>
                                 <span>General (All Departments)</span>
                             </label>
                         </div>
                     </div>
 
-                    <button className="btn btn-primary upload-submit" onClick={simulateUpload} disabled={!selectedFile} data-hoverable>
+                    <button className="btn btn-primary upload-submit" onClick={simulateUpload} disabled={!selectedFile || !formData.title.trim()} data-hoverable>
                         <UploadCloud size={18} /> Upload & Process
                     </button>
                 </div>

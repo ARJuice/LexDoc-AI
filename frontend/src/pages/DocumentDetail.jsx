@@ -4,7 +4,7 @@ import { ArrowLeft, Copy, RefreshCw, Download, ZoomIn, ZoomOut, FileText, Tag, C
 import gsap from 'gsap';
 import {
     documents, getSummaryByDocId, getDocumentTags, getDocumentUploader,
-    getDeptById, getEventsByDocId, formatDate, formatFileSize
+    getDocumentDepartments, getTagColor, sortTagsByPriority, getEventsByDocId, formatDate, formatFileSize
 } from '../data/mockData';
 import './DocumentDetail.css';
 
@@ -14,7 +14,8 @@ export default function DocumentDetail() {
     const pageRef = useRef(null);
     const doc = documents.find(d => d.id === Number(id));
     const summary = doc ? getSummaryByDocId(doc.id) : null;
-    const docTags = doc ? getDocumentTags(doc) : [];
+    const docTags = doc ? sortTagsByPriority(getDocumentTags(doc)) : [];
+    const docDepts = doc ? getDocumentDepartments(doc) : [];
     const uploader = doc ? getDocumentUploader(doc) : null;
     const docEvents = doc ? getEventsByDocId(doc.id) : [];
 
@@ -85,11 +86,14 @@ export default function DocumentDetail() {
                     <div className="ai-section">
                         <h4><Tag size={16} /> Tags</h4>
                         <div className="ai-tags">
-                            {docTags.map(tag => (
-                                <span key={tag.id} className="tag-chip" style={{ borderColor: tag.color, color: tag.color }}>
-                                    {tag.name}
-                                </span>
-                            ))}
+                            {docTags.map(tag => {
+                                const color = getTagColor(tag);
+                                return (
+                                    <span key={tag.id} className={`tag-chip ${tag.type === 'PRIORITY' ? 'tag-priority' : ''}`} style={{ borderColor: color, color }}>
+                                        {tag.name}
+                                    </span>
+                                );
+                            })}
                             {docTags.length === 0 && <span className="ai-no-data">No tags</span>}
                         </div>
                     </div>
@@ -125,10 +129,9 @@ export default function DocumentDetail() {
                                 <span className="ai-meta-value">{formatFileSize(doc.file_size)}</span>
                             </div>
                             <div className="ai-meta-item">
-                                <span className="ai-meta-label">Status</span>
+                                <span className="ai-meta-label">Department</span>
                                 <span className="ai-meta-value">
-                                    <span className={`status-dot ${doc.processing_status === 'summarized' ? 'success' : 'warning'}`}></span>
-                                    {doc.processing_status}
+                                    {docDepts.length > 0 ? docDepts.map(d => d.name).join(', ') : doc.is_general ? 'General' : '—'}
                                 </span>
                             </div>
                         </div>

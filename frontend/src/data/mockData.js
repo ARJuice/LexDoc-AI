@@ -159,6 +159,19 @@ export const getDocumentTags = (doc) => (doc.tag_ids || []).map(getTagById).filt
 export const getDocumentUploader = (doc) => getUserById(doc.uploader_id);
 export const getDocumentDepartments = (doc) => (doc.dept_ids || []).map(getDeptById).filter(Boolean);
 
+/** Priority tags get priority-based color; all other tags get a uniform muted color */
+export const getTagColor = (tag) => {
+    if (tag.type === 'PRIORITY') return tag.color;
+    return 'var(--color-text-secondary)';
+};
+
+export const sortTagsByPriority = (tagList) => {
+    return [...tagList].sort((left, right) => {
+        if (left.type === right.type) return right.weight - left.weight;
+        return left.type === 'PRIORITY' ? -1 : 1;
+    });
+};
+
 export const formatFileSize = (bytes) => {
     if (bytes >= 1000000) return (bytes / 1000000).toFixed(1) + ' MB';
     if (bytes >= 1000) return (bytes / 1000).toFixed(0) + ' KB';

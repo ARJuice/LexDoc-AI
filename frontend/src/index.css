@@ -406,3 +406,7 @@ textarea {
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
 }
+
+.tag-chip.tag-priority {
+  font-weight: 600;
+}

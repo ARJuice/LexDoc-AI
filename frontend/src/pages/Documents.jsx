@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Search, Filter, Grid3x3, List } from 'lucide-react';
+import { FileText, Search, Grid3x3, List, ArrowDownUp } from 'lucide-react';
 import gsap from 'gsap';
 import {
-    documents, departments, tags, users,
-    getDocumentTags, getDocumentUploader, getSummaryByDocId,
+    documents, departments, tags,
+    getDocumentTags, getDocumentUploader, getDocumentDepartments,
+    getSummaryByDocId, getTagColor, sortTagsByPriority,
     formatDate, formatFileSize
 } from '../data/mockData';
 import './Documents.css';
@@ -15,14 +16,21 @@ export default function Documents() {
     const [search, setSearch] = useState('');
     const [filterDept, setFilterDept] = useState('all');
     const [filterTag, setFilterTag] = useState('all');
+    const [sortByDate, setSortByDate] = useState('newest');
     const [viewMode, setViewMode] = useState('grid');
 
-    const filteredDocs = documents.filter(doc => {
-        const matchesSearch = doc.title.toLowerCase().includes(search.toLowerCase());
-        const matchesDept = filterDept === 'all' || doc.dept_ids.includes(Number(filterDept)) || doc.is_general;
-        const matchesTag = filterTag === 'all' || doc.tag_ids.includes(Number(filterTag));
-        return matchesSearch && matchesDept && matchesTag;
-    });
+    const filteredDocs = documents
+        .filter(doc => {
+            const matchesSearch = doc.title.toLowerCase().includes(search.toLowerCase());
+            const matchesDept = filterDept === 'all' || doc.dept_ids.includes(Number(filterDept)) || doc.is_general;
+            const matchesTag = filterTag === 'all' || doc.tag_ids.includes(Number(filterTag));
+            return matchesSearch && matchesDept && matchesTag;
+        })
+        .sort((left, right) => {
+            const leftDate = new Date(left.uploaded_at);
+            const rightDate = new Date(right.uploaded_at);
+            return sortByDate === 'oldest' ? leftDate - rightDate : rightDate - leftDate;
+        });
 
     useEffect(() => {
         const el = pageRef.current;
@@ -37,7 +45,7 @@ export default function Documents() {
             { opacity: 0, y: 20, scale: 0.97 },
             { opacity: 1, y: 0, scale: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out' }
         );
-    }, [search, filterDept, filterTag, viewMode]);
+    }, [search, filterDept, filterTag, sortByDate, viewMode]);
 
     return (
         <div ref={pageRef} className="page-container documents-page">
@@ -61,6 +69,13 @@ export default function Documents() {
                         <option value="all">All Tags</option>
                         {tags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                     </select>
+                    <div className="docs-sort-wrap">
+                        <ArrowDownUp size={16} />
+                        <select className="docs-filter" value={sortByDate} onChange={(e) => setSortByDate(e.target.value)}>
+                            <option value="newest">Newest Uploads</option>
+                            <option value="oldest">Oldest Uploads</option>
+                        </select>
+                    </div>
                     <div className="view-toggle">
                         <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')} data-hoverable><Grid3x3 size={16} /></button>
                         <button className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')} data-hoverable><List size={16} /></button>
@@ -71,7 +86,8 @@ export default function Documents() {
             <div className={`docs-grid ${viewMode}`}>
                 {filteredDocs.map(doc => {
                     const uploader = getDocumentUploader(doc);
-                    const docTags = getDocumentTags(doc);
+                    const docTags = sortTagsByPriority(getDocumentTags(doc));
+                    const docDepts = getDocumentDepartments(doc);
                     const summary = getSummaryByDocId(doc.id);
                     return (
                         <div key={doc.id} className="doc-card card" onClick={() => navigate(`/documents/${doc.id}`)} data-hoverable>
@@ -81,12 +97,20 @@ export default function Documents() {
                             </div>
                             <h4 className="doc-card-title">{doc.title}</h4>
                             {summary && <p className="doc-card-summary">{summary.content.slice(0, 120)}...</p>}
+                            <div className="doc-card-dept">
+                                {docDepts.length > 0
+                                    ? docDepts.map(d => d.name).join(', ')
+                                    : doc.is_general ? 'General' : '—'}
+                            </div>
                             <div className="doc-card-tags">
-                                {docTags.map(tag => (
-                                    <span key={tag.id} className="tag-chip" style={{ borderColor: tag.color, color: tag.color }}>
-                                        {tag.name}
-                                    </span>
-                                ))}
+                                {docTags.map(tag => {
+                                    const color = getTagColor(tag);
+                                    return (
+                                        <span key={tag.id} className={`tag-chip ${tag.type === 'PRIORITY' ? 'tag-priority' : ''}`} style={{ borderColor: color, color }}>
+                                            {tag.name}
+                                        </span>
+                                    );
+                                })}
                             </div>
                             <div className="doc-card-footer">
                                 <span>{uploader?.username}</span>

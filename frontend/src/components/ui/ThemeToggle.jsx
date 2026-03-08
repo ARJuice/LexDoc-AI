@@ -9,8 +9,6 @@ export default function ThemeToggle() {
 
     const switchTheme = () => {
         dispatch(toggleTheme());
-        document.documentElement.classList.toggle('dark');
-        localStorage.setItem('lexdoc-theme', isDark ? 'light' : 'dark');
     };
 
     const handleToggle = () => {
