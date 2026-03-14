@@ -10,9 +10,11 @@
 }
 
 .insight-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
     padding: var(--space-5);
 }
 
@@ -120,8 +122,8 @@
 .summary-item {
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
-    background: var(--color-bg);
-    border: 1px solid var(--color-border-light);
+    background: transparent;
+    border: 1px solid var(--glass-border);
     transition: border-color var(--transition-fast);
 }
 
@@ -185,7 +187,7 @@
     height: 10px;
     border-radius: 50%;
     background: var(--color-primary);
-    border: 2px solid var(--color-surface);
+    border: 2px solid var(--glass-bg);
 }
 
 .timeline-item.urgent .timeline-dot {
@@ -197,8 +199,8 @@
 }
 
 .timeline-content {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border-light);
+    background: transparent;
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     padding: var(--space-3) var(--space-4);
 }

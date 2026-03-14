@@ -49,9 +49,6 @@ export default function Profile() {
             <h2 className="page-title"><User size={28} className="title-icon" /> My Profile</h2>
 
             <div className="profile-card glass-card">
-                <div className="profile-avatar">
-                    {profile?.username?.charAt(0)?.toUpperCase() || 'U'}
-                </div>
                 <div className="profile-details">
                     <div className="profile-row">
                         <span className="profile-label">Name</span>
@@ -74,12 +71,12 @@ export default function Profile() {
                         <span className="profile-value">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</span>
                     </div>
                 </div>
-            </div>
 
-            <div className="profile-actions">
-                <button className="btn btn-primary" onClick={signOut} data-hoverable>
-                    <LogOut size={16} /> Log Out
-                </button>
+                <div className="profile-actions">
+                    <button className="btn btn-outline btn-logout" onClick={signOut} data-hoverable>
+                        <LogOut size={16} /> Log Out
+                    </button>
+                </div>
             </div>
         </div>
     );

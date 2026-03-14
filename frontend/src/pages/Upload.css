@@ -84,10 +84,9 @@
 .form-group select {
     width: 100%;
     padding: var(--space-3) var(--space-4);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
+    background: var(--color-surface);
     color: var(--text-primary);
     font-size: var(--fs-sm);
     outline: none;
@@ -109,17 +108,20 @@
 
 .form-tag {
     padding: var(--space-1) var(--space-3);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-full);
     font-size: var(--fs-xs);
     font-weight: 500;
     color: var(--text-secondary);
-    background: var(--glass-bg);
+    background: var(--color-surface);
     transition: all var(--transition-fast);
 }
 
 .form-tag.selected {
     font-weight: 600;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-color: var(--color-primary);
 }
 
 /* Tags selection layout */
@@ -163,9 +165,9 @@
 .custom-tag-input-row input {
     flex: 1;
     padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    background: var(--glass-bg);
+    background: var(--color-surface);
     color: var(--text-primary);
     font-size: var(--fs-sm);
     outline: none;
@@ -315,10 +317,9 @@
     align-items: flex-start;
     gap: 2px;
     padding: var(--space-3);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
+    background: var(--color-surface);
     text-align: left;
     transition: all var(--transition-fast);
 }
@@ -343,11 +344,16 @@
 
 .form-hint {
     display: flex;
-    align-items: center;
-    gap: var(--space-1);
+    align-items: flex-start;
+    gap: var(--space-2);
     font-size: var(--fs-xs);
     color: var(--color-text-muted);
     margin-top: var(--space-2);
+}
+
+.form-hint svg {
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .upload-submit {

@@ -21,6 +21,7 @@
     transition: left 0.4s ease;
 }
 
+.app-main.sidebar-collapsed .topbar,
 .sidebar.collapsed~.app-main .topbar,
 .sidebar.collapsed+.app-main .topbar {
     left: calc(var(--sidebar-collapsed) + 40px);
