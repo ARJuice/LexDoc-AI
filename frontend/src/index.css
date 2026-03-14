@@ -37,10 +37,11 @@
   --color-text-muted: #94A3B8;
   --color-text-inverse: #FFFFFF;
 
-  /* Glassmorphism System */
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-blur: blur(24px);
+  /* Liquid Glassmorphism System */
+  --glass-bg: rgba(255, 255, 255, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-blur: blur(32px);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.9);
 
   /* Solid surfaces (for fallback/non-glass) */
   --color-surface: #ffffff;
@@ -111,9 +112,10 @@
   --text-muted: #64748b;
   --text-inverse: #111111;
 
-  --glass-bg: rgba(20, 20, 20, 0.55);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: blur(20px);
+  --glass-bg: rgba(20, 20, 20, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-blur: blur(32px);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15);
 
   --color-surface: #1e293b;
   --color-surface-hover: #334155;
@@ -329,7 +331,7 @@ textarea {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--glass-shadow);
   transition: transform var(--transition-base),
     box-shadow var(--transition-base),
     border-color var(--transition-base);
@@ -337,7 +339,7 @@ textarea {
 
 .card:hover {
   transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glass-shadow), var(--shadow-md);
   border-color: var(--text-muted);
 }
 
@@ -349,13 +351,13 @@ textarea {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glass-shadow);
   transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .glass-card:hover {
   transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--glass-shadow), var(--shadow-lg);
 }
 
 .badge {

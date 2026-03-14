@@ -85,6 +85,10 @@
     white-space: nowrap;
 }
 
+.sidebar-link svg {
+    flex-shrink: 0;
+}
+
 .sidebar-link:hover {
     background: var(--color-surface-hover);
     color: var(--text-primary);
@@ -126,11 +130,13 @@
     justify-content: center;
     padding: var(--space-4);
     border-top: 1px solid var(--color-border);
-    color: var(--text-muted);
+    color: var(--text-primary);
+    opacity: 0.8;
+    background: var(--color-surface-hover);
     transition: all var(--transition-fast);
 }
 
 .sidebar-toggle:hover {
-    color: var(--text-primary);
-    background: var(--color-surface-hover);
+    opacity: 1;
+    background: var(--color-border);
 }
