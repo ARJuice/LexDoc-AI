@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import AppLayout from './components/layout/AppLayout';
 import CustomCursor from './components/ui/CustomCursor';
 import SmoothScroll from './components/ui/SmoothScroll';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -16,6 +17,9 @@ import AdminDepartments from './pages/AdminDepartments';
 import AdminAuditLogs from './pages/AdminAuditLogs';
 import Profile from './pages/Profile';
 import MyUploads from './pages/MyUploads';
+import Login from './pages/Login';
+import AuthCallback from './pages/AuthCallback';
+import SetupAccount from './pages/SetupAccount';
 
 function App() {
   const isDark = useSelector((s) => s.theme.isDark);
@@ -32,21 +36,33 @@ function App() {
         <CustomCursor />
         <BrowserRouter>
           <Routes>
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/documents" element={<Documents />} />
-              <Route path="/documents/:id" element={<DocumentDetail />} />
-              <Route path="/upload" element={<Upload />} />
-              <Route path="/my-uploads" element={<MyUploads />} />
-              <Route path="/insights" element={<AIInsights />} />
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
-              <Route path="/admin/users" element={<AdminUsers />} />
-              <Route path="/admin/departments" element={<AdminDepartments />} />
-              <Route path="/admin/audit" element={<AdminAuditLogs />} />
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/setup-account" element={<SetupAccount />} />
+              
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/documents" element={<Documents />} />
+                <Route path="/documents/:id" element={<DocumentDetail />} />
+                <Route path="/upload" element={<Upload />} />
+                <Route path="/my-uploads" element={<MyUploads />} />
+                <Route path="/insights" element={<AIInsights />} />
 
-              <Route path="/profile" element={<Profile />} />
+                <Route path="/admin/users" element={<AdminUsers />} />
+                <Route path="/admin/departments" element={<AdminDepartments />} />
+                <Route path="/admin/audit" element={<AdminAuditLogs />} />
+
+                <Route path="/profile" element={<Profile />} />
+              </Route>
             </Route>
+
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </BrowserRouter>
       </SmoothScroll>

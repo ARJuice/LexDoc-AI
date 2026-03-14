@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Bell, Search } from 'lucide-react';
 import ThemeToggle from '../ui/ThemeToggle';
 import { setPanelOpen } from '../../store/store';
-import { currentUser } from '../../data/mockData';
+import { useAuth } from '../../context/AuthProvider';
 import './TopBar.css';
 
 export default function TopBar() {
     const unreadCount = useSelector((s) => s.notifications.unreadCount);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { profile } = useAuth();
+    const username = profile?.username || 'User';
 
     return (
         <header className="topbar">
@@ -39,10 +41,10 @@ export default function TopBar() {
 
                 <div className="topbar-user" data-hoverable onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
                     <div className="topbar-avatar">
-                        {currentUser.username.charAt(0).toUpperCase()}
+                        {username.charAt(0).toUpperCase()}
                     </div>
                     <span className="topbar-username">
-                        {currentUser.username.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')}
+                        {username.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')}
                     </span>
                 </div>
             </div>
