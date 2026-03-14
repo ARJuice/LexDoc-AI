@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Search, Grid3x3, List, ArrowDownUp } from 'lucide-react';
+import { FileText, Search, Grid3x3, List, ArrowDownUp, Lock } from 'lucide-react';
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
 import {
     fetchDocuments, fetchDepartments, fetchTags, fetchSummaries,
-    getTagColor, sortTagsByPriority, formatDate, formatFileSize
+    getTagColor, sortTagsByPriority, formatDate, formatFileSize,
+    ACCESS_LEVEL_INFO
 } from '../lib/supabaseData';
 import './Documents.css';
 
@@ -36,6 +37,7 @@ export default function MyUploads() {
         load();
     }, []);
 
+    // Show ALL of user's own uploads, including PRIVATE
     const myDocs = profile ? allDocs.filter(doc => doc.uploader_id === profile.id) : [];
 
     const getDocTags = (doc) => (doc.tag_ids || []).map(id => tags.find(t => t.id === id)).filter(Boolean);
@@ -115,11 +117,19 @@ export default function MyUploads() {
                     const docTags = sortTagsByPriority(getDocTags(doc));
                     const docDepts = getDocDepts(doc);
                     const summary = getSummary(doc.id);
+                    const levelInfo = ACCESS_LEVEL_INFO[doc.access_level] || ACCESS_LEVEL_INFO.PUBLIC;
+                    const isRestricted = doc.access_level === 'PRIVATE' || doc.access_level === 'CONFIDENTIAL';
                     return (
                         <div key={doc.id} className="doc-card card" onClick={() => navigate(`/documents/${doc.id}`)} data-hoverable>
                             <div className="doc-card-header">
                                 <FileText size={20} className="doc-card-icon" />
-                                <span className="doc-card-size">{formatFileSize(doc.file_size)}</span>
+                                <div className="doc-card-header-right">
+                                    {isRestricted && <Lock size={14} style={{ color: levelInfo.color }} />}
+                                    <span className="doc-access-badge" style={{ color: levelInfo.color, borderColor: levelInfo.color }}>
+                                        {levelInfo.label}
+                                    </span>
+                                    <span className="doc-card-size">{formatFileSize(doc.file_size)}</span>
+                                </div>
                             </div>
                             <h4 className="doc-card-title">{doc.title}</h4>
                             {summary && <p className="doc-card-summary">{summary.content.slice(0, 120)}...</p>}
@@ -138,6 +148,9 @@ export default function MyUploads() {
                             </div>
                             <div className="doc-card-footer">
                                 <span>{formatDate(doc.uploaded_at)}</span>
+                                {doc.expiry_date && (
+                                    <span className="doc-expiry-badge">Expires {formatDate(doc.expiry_date)}</span>
+                                )}
                             </div>
                         </div>
                     );

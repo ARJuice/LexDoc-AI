@@ -282,16 +282,63 @@
     transition: transform 0.2s ease;
 }
 
-.form-radio input[type="radio"]:checked + .radio-custom {
+.form-radio input[type="radio"]:checked+.radio-custom {
     border-color: var(--color-primary);
 }
 
-.form-radio input[type="radio"]:checked + .radio-custom::after {
+.form-radio input[type="radio"]:checked+.radio-custom::after {
     transform: scale(1);
 }
 
 .form-radio:hover .radio-custom {
     border-color: var(--color-primary);
+}
+
+/* Access Level Grid */
+.access-level-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--space-2);
+}
+
+.access-level-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    text-align: left;
+    transition: all var(--transition-fast);
+}
+
+.access-level-btn:hover {
+    border-color: var(--color-primary);
+}
+
+.access-level-btn.selected {
+    font-weight: 600;
+}
+
+.access-level-name {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+}
+
+.access-level-desc {
+    font-size: var(--fs-xs);
+    opacity: 0.7;
+}
+
+.form-hint {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    margin-top: var(--space-2);
 }
 
 .upload-submit {

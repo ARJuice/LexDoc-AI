@@ -5,7 +5,9 @@ import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
 import {
     fetchDocuments, fetchSummaries, fetchEvents,
-    formatDate, getDaysUntil, getTagColor, sortTagsByPriority
+    fetchTags, fetchDepartments,
+    formatDate, getDaysUntil, getTagColor, sortTagsByPriority,
+    filterDocumentsByAccess
 } from '../lib/supabaseData';
 import './Dashboard.css';
 
@@ -23,14 +25,13 @@ export default function Dashboard() {
 
     useEffect(() => {
         async function load() {
-            const [docs, sums, evts] = await Promise.all([
+            const [docs, sums, evts, t, d] = await Promise.all([
                 fetchDocuments(),
                 fetchSummaries(),
                 fetchEvents(),
+                fetchTags(),
+                fetchDepartments(),
             ]);
-            // Also fetch tags and departments for display
-            const { fetchTags, fetchDepartments } = await import('../lib/supabaseData');
-            const [t, d] = await Promise.all([fetchTags(), fetchDepartments()]);
             setDocuments(docs);
             setSummaries(sums);
             setEvents(evts);
@@ -41,18 +42,19 @@ export default function Dashboard() {
         load();
     }, []);
 
-    const totalDocs = documents.length;
+    // Filter documents by role-based access
+    const accessibleDocs = filterDocumentsByAccess(documents, profile);
+
+    const totalDocs = accessibleDocs.length;
     const myUploads = profile ? documents.filter(d => d.uploader_id === profile.id).length : 0;
     const totalSummaries = summaries.length;
-    const recentDocs = [...documents].sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at)).slice(0, 5);
+    const recentDocs = [...accessibleDocs].sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at)).slice(0, 5);
     const upcomingEvents = [...events].sort(
         (a, b) => new Date(`${a.event_date}T${a.event_time || '00:00'}`) - new Date(`${b.event_date}T${b.event_time || '00:00'}`)
     );
 
-    // Helper to resolve tags/depts from IDs
     const getDocTags = (doc) => (doc.tag_ids || []).map(id => tags.find(t => t.id === id)).filter(Boolean);
     const getDocDepts = (doc) => (doc.dept_ids || []).map(id => departments.find(d => d.id === id)).filter(Boolean);
-    const getUploader = (doc) => doc.uploader_id === profile?.id ? profile : null;
 
     useEffect(() => {
         if (loading) return;
@@ -98,7 +100,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                         <div className="stat-value">{totalDocs}</div>
-                        <div className="stat-label">Total Documents</div>
+                        <div className="stat-label">Accessible Documents</div>
                     </div>
                 </div>
                 <div className="stat-card">

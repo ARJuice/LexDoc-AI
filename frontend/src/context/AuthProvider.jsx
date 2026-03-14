@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
@@ -18,7 +18,7 @@ export default function AuthProvider({ children }) {
     const [authError, setAuthError] = useState(null);
 
     // Fetch the user profile from the public.users table
-    async function fetchProfile(email) {
+    const fetchProfile = useCallback(async (email) => {
         const { data, error } = await supabase
             .from('users')
             .select('*, roles(*), departments(*)')
@@ -26,7 +26,7 @@ export default function AuthProvider({ children }) {
             .maybeSingle();
         if (error) console.error('fetchProfile error:', error);
         return data;
-    }
+    }, []);
 
     // On mount + auth state changes
     useEffect(() => {
@@ -71,9 +71,9 @@ export default function AuthProvider({ children }) {
         });
 
         return () => subscription.unsubscribe();
-    }, []);
+    }, [fetchProfile]);
 
-    async function signInWithGoogle() {
+    const signInWithGoogle = useCallback(async () => {
         setAuthError(null);
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
@@ -82,9 +82,9 @@ export default function AuthProvider({ children }) {
             },
         });
         if (error) setAuthError(error.message);
-    }
+    }, []);
 
-    async function signInWithPassword(email, password) {
+    const signInWithPassword = useCallback(async (email, password) => {
         setAuthError(null);
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
@@ -92,30 +92,40 @@ export default function AuthProvider({ children }) {
             return false;
         }
         return true;
-    }
+    }, []);
 
-    async function signOut() {
+    const signOut = useCallback(async () => {
         await supabase.auth.signOut();
         setSession(null);
         setProfile(null);
-    }
+    }, []);
+
+    const refreshProfile = useCallback(() => {
+        if (session?.user?.email) {
+            return fetchProfile(session.user.email).then(setProfile);
+        }
+        return Promise.resolve();
+    }, [session, fetchProfile]);
 
     // Check if the user needs to set up their account (Google verified but no public.users row)
     const needsSetup = session && !loading && !profile;
 
+    // Memoize context value to prevent unnecessary re-renders
+    const value = useMemo(() => ({
+        session,
+        profile,
+        loading,
+        authError,
+        setAuthError,
+        needsSetup,
+        signInWithGoogle,
+        signInWithPassword,
+        signOut,
+        refreshProfile,
+    }), [session, profile, loading, authError, needsSetup, signInWithGoogle, signInWithPassword, signOut, refreshProfile]);
+
     return (
-        <AuthContext.Provider value={{
-            session,
-            profile,
-            loading,
-            authError,
-            setAuthError,
-            needsSetup,
-            signInWithGoogle,
-            signInWithPassword,
-            signOut,
-            refreshProfile: () => session?.user?.email && fetchProfile(session.user.email).then(setProfile),
-        }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );

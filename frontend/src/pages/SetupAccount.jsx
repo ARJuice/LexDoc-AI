@@ -52,14 +52,14 @@ export default function SetupAccount() {
         setSubmitting(true);
 
         try {
-            // Determine role: default to Staff (lowest access) if not selected
-            const selectedRoleId = form.roleId ? Number(form.roleId) : roles.find(r => r.name === 'Staff')?.id;
+            // Determine role: default to Student (lowest access) for self-registration
+            const selectedRoleId = form.roleId ? Number(form.roleId) : roles.find(r => r.name === 'Student')?.id;
 
             // Insert into public.users table
             const { error: insertError } = await supabase.from('users').insert({
                 username: form.username.trim(),
                 email: session.user.email,
-                password_hash: form.password, // In production, this would be hashed server-side
+                password_hash: 'google_auth', // Placeholder — actual password managed by Supabase Auth
                 google_id: session.user.id,
                 is_verified: true,
                 role_id: selectedRoleId,
@@ -89,8 +89,8 @@ export default function SetupAccount() {
         setSubmitting(false);
     };
 
-    // Only Staff role should be available for self-registration; admin assigns higher roles
-    const staffRoles = roles.filter(r => r.access_level <= 1);
+    // Only Student role should be available for self-registration; admin assigns higher roles
+    const studentRoles = roles.filter(r => r.access_level <= 1);
 
     return (
         <div ref={pageRef} className="setup-page">
@@ -159,8 +159,8 @@ export default function SetupAccount() {
                             </select>
                         </div>
 
-                        {/* Role is auto-assigned as Staff for self-registration */}
-                        <input type="hidden" value={staffRoles[0]?.id || ''} />
+                        {/* Role is auto-assigned as Student for self-registration */}
+                        <input type="hidden" value={studentRoles[0]?.id || ''} />
 
                         <button
                             type="submit"

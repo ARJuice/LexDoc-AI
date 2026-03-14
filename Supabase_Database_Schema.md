@@ -1,4 +1,4 @@
-# MetroDocAI – Optimized Database Schema & Architecture
+# LexDoc AI – Optimized Database Schema & Architecture (College System)
 
 ## 1. Architecture Overview
 - **Frontend:** React + GSAP animations
@@ -24,15 +24,15 @@ Defines the organizational structure. Every user belongs to exactly one departme
 | --- | --- | --- |
 | `id` | PK | Department ID |
 | `name` | TEXT | Department name |
-| `code` | TEXT | Short identifier (FIN, HR, LEG) |
+| `code` | TEXT | Short identifier (CS, EC, BT, EEE, BME, CE) |
 
 #### 2. roles
 Defines role hierarchy and permission levels. Enabled for fast permission comparison inside backend logic.
 | Column | Type | Description |
 | --- | --- | --- |
 | `id` | PK | Role ID |
-| `name` | TEXT | Admin / Head / Staff |
-| `access_level` | INTEGER | Numeric hierarchy Example: Admin = 10, Head = 5, Staff = 1 |
+| `name` | TEXT | Admin / HOD / Teacher / Student |
+| `access_level` | INTEGER | Numeric hierarchy: Admin=10, HOD=7, Teacher=5, Student=1 |
 
 #### 3. users
 Application users.
@@ -59,7 +59,7 @@ Unified tagging system. Priority tags use weight for sorting: High = 100, Medium
 | `color` | TEXT | UI Color |
 
 #### 5. documents
-Stores document metadata and tracks AI processing status.
+Stores document metadata, sensitivity level, and expiry.
 | Column | Type | Description |
 | --- | --- | --- |
 | `id` | PK | Document ID |
@@ -71,6 +71,8 @@ Stores document metadata and tracks AI processing status.
 | `checksum` | TEXT | Hash |
 | `processing_status`| TEXT | `uploaded`, `processing`, `summarized`, `failed` |
 | `is_general` | BOOLEAN | Global visibility |
+| `access_level` | TEXT | `PUBLIC`, `STUDENT`, `STAFF`, `CONFIDENTIAL`, `PRIVATE` |
+| `expiry_date` | TIMESTAMP | Auto-delete date (NULL = permanent) |
 | `uploader_id` | FK | references `users.id` |
 | `uploaded_at` | TIMESTAMP | Upload time |
 

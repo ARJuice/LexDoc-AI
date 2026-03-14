@@ -24,7 +24,7 @@ const sidebarSlice = createSlice({
 // ---- Notifications Slice ----
 const notificationsSlice = createSlice({
     name: 'notifications',
-    initialState: { unreadCount: 5, panelOpen: false },
+    initialState: { unreadCount: 0, panelOpen: false },
     reducers: {
         setPanelOpen: (state, action) => { state.panelOpen = action.payload; },
         decrementUnread: (state) => { state.unreadCount = Math.max(0, state.unreadCount - 1); },

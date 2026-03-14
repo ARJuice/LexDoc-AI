@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Search, Grid3x3, List, ArrowDownUp } from 'lucide-react';
+import { FileText, Search, Grid3x3, List, ArrowDownUp, Lock, Shield } from 'lucide-react';
 import gsap from 'gsap';
+import { useAuth } from '../context/AuthProvider';
 import {
     fetchDocuments, fetchDepartments, fetchTags, fetchSummaries,
-    getTagColor, sortTagsByPriority, formatDate, formatFileSize
+    getTagColor, sortTagsByPriority, formatDate, formatFileSize,
+    filterDocumentsByAccess, ACCESS_LEVEL_INFO
 } from '../lib/supabaseData';
 import './Documents.css';
 
 export default function Documents() {
     const pageRef = useRef(null);
     const navigate = useNavigate();
+    const { profile } = useAuth();
     const [search, setSearch] = useState('');
     const [filterDept, setFilterDept] = useState('all');
     const [filterTag, setFilterTag] = useState('all');
@@ -34,11 +37,14 @@ export default function Documents() {
         load();
     }, []);
 
+    // Apply role-based access filter
+    const accessibleDocs = filterDocumentsByAccess(documents, profile);
+
     const getDocTags = (doc) => (doc.tag_ids || []).map(id => tags.find(t => t.id === id)).filter(Boolean);
     const getDocDepts = (doc) => (doc.dept_ids || []).map(id => departments.find(d => d.id === id)).filter(Boolean);
     const getSummary = (docId) => summaries.find(s => s.doc_id === docId);
 
-    const filteredDocs = documents
+    const filteredDocs = accessibleDocs
         .filter(doc => {
             const matchesSearch = doc.title.toLowerCase().includes(search.toLowerCase());
             const matchesDept = filterDept === 'all' || (doc.dept_ids || []).includes(Number(filterDept)) || doc.is_general;
@@ -108,11 +114,19 @@ export default function Documents() {
                     const docTags = sortTagsByPriority(getDocTags(doc));
                     const docDepts = getDocDepts(doc);
                     const summary = getSummary(doc.id);
+                    const levelInfo = ACCESS_LEVEL_INFO[doc.access_level] || ACCESS_LEVEL_INFO.PUBLIC;
+                    const isRestricted = doc.access_level === 'PRIVATE' || doc.access_level === 'CONFIDENTIAL';
                     return (
                         <div key={doc.id} className="doc-card card" onClick={() => navigate(`/documents/${doc.id}`)} data-hoverable>
                             <div className="doc-card-header">
                                 <FileText size={20} className="doc-card-icon" />
-                                <span className="doc-card-size">{formatFileSize(doc.file_size)}</span>
+                                <div className="doc-card-header-right">
+                                    {isRestricted && <Lock size={14} style={{ color: levelInfo.color }} />}
+                                    <span className="doc-access-badge" style={{ color: levelInfo.color, borderColor: levelInfo.color }}>
+                                        {levelInfo.label}
+                                    </span>
+                                    <span className="doc-card-size">{formatFileSize(doc.file_size)}</span>
+                                </div>
                             </div>
                             <h4 className="doc-card-title">{doc.title}</h4>
                             {summary && <p className="doc-card-summary">{summary.content.slice(0, 120)}...</p>}

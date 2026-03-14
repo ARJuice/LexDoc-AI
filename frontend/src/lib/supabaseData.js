@@ -28,22 +28,35 @@ export async function fetchDocuments() {
     const { data, error } = await supabase
         .from('documents')
         .select('*')
+        .or('expiry_date.is.null,expiry_date.gt.' + new Date().toISOString())
         .order('uploaded_at', { ascending: false });
     if (error) { console.error('fetchDocuments:', error); return []; }
+    if (!data || data.length === 0) return [];
 
-    // For each document, fetch its tag_ids and dept_ids
-    const enriched = await Promise.all(data.map(async (doc) => {
-        const [tagRes, deptRes] = await Promise.all([
-            supabase.from('document_tags').select('tag_id').eq('doc_id', doc.id),
-            supabase.from('document_departments').select('dept_id').eq('doc_id', doc.id),
-        ]);
-        return {
-            ...doc,
-            tag_ids: (tagRes.data || []).map(r => r.tag_id),
-            dept_ids: (deptRes.data || []).map(r => r.dept_id),
-        };
+    // Batch fetch all tag and dept associations (avoids N+1)
+    const docIds = data.map(d => d.id);
+    const [tagRes, deptRes] = await Promise.all([
+        supabase.from('document_tags').select('doc_id, tag_id').in('doc_id', docIds),
+        supabase.from('document_departments').select('doc_id, dept_id').in('doc_id', docIds),
+    ]);
+
+    // Build lookup maps
+    const tagMap = {};
+    const deptMap = {};
+    (tagRes.data || []).forEach(r => {
+        if (!tagMap[r.doc_id]) tagMap[r.doc_id] = [];
+        tagMap[r.doc_id].push(r.tag_id);
+    });
+    (deptRes.data || []).forEach(r => {
+        if (!deptMap[r.doc_id]) deptMap[r.doc_id] = [];
+        deptMap[r.doc_id].push(r.dept_id);
+    });
+
+    return data.map(doc => ({
+        ...doc,
+        tag_ids: tagMap[doc.id] || [],
+        dept_ids: deptMap[doc.id] || [],
     }));
-    return enriched;
 }
 
 export async function fetchDocumentById(id) {
@@ -118,7 +131,7 @@ export async function fetchAuditLogs() {
 
 // ---- Upload Functions ----
 
-export async function uploadDocument(file, { title, deptId, tagIds, isGeneral, uploaderId }) {
+export async function uploadDocument(file, { title, deptId, tagIds, isGeneral, uploaderId, accessLevel = 'PUBLIC', expiryDate = null }) {
     // 1. Upload file to Supabase Storage
     const filePath = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
     const { error: storageError } = await supabase.storage
@@ -140,14 +153,16 @@ export async function uploadDocument(file, { title, deptId, tagIds, isGeneral, u
             mime_type: file.type,
             processing_status: 'uploaded',
             is_general: isGeneral,
+            access_level: accessLevel,
+            expiry_date: expiryDate,
             uploader_id: uploaderId,
         })
         .select()
         .single();
     if (docError) { console.error('Document insert error:', docError); throw docError; }
 
-    // 3. Insert department access (if not general)
-    if (!isGeneral && deptId) {
+    // 3. Insert department access (if not general and not private)
+    if (!isGeneral && accessLevel !== 'PRIVATE' && deptId) {
         await supabase.from('document_departments').insert({ doc_id: doc.id, dept_id: Number(deptId) });
     }
 
@@ -162,13 +177,82 @@ export async function uploadDocument(file, { title, deptId, tagIds, isGeneral, u
         user_id: uploaderId,
         doc_id: doc.id,
         action: 'UPLOAD',
-        details: `Uploaded ${title}`,
+        details: `Uploaded ${title} [${accessLevel}]`,
     });
 
     return doc;
 }
 
-// ---- Helper Functions (kept from mockData.js) ----
+// ---- Role-Based Access Helpers ----
+
+// Returns the allowed document access levels for a given role access_level
+export const getAllowedAccessLevels = (roleAccessLevel) => {
+    if (roleAccessLevel >= 10) return ['PUBLIC', 'STUDENT', 'STAFF', 'CONFIDENTIAL', 'PRIVATE']; // Admin
+    if (roleAccessLevel >= 7) return ['PUBLIC', 'STUDENT', 'STAFF', 'CONFIDENTIAL']; // HOD
+    if (roleAccessLevel >= 5) return ['PUBLIC', 'STUDENT', 'STAFF']; // Teacher
+    return ['PUBLIC', 'STUDENT']; // Student
+};
+
+// Check if a user can view a specific document
+export const canUserViewDocument = (doc, profile) => {
+    if (!profile) return false;
+    const roleLevel = profile.roles?.access_level || 0;
+
+    // Admin can see everything
+    if (roleLevel >= 10) return true;
+
+    // Uploader can always see their own docs
+    if (doc.uploader_id === profile.id) return true;
+
+    // PRIVATE docs: only uploader + admin
+    if (doc.access_level === 'PRIVATE') return false;
+
+    // Check access level
+    const allowed = getAllowedAccessLevels(roleLevel);
+    if (!allowed.includes(doc.access_level)) return false;
+
+    // Check department isolation (if not general)
+    if (!doc.is_general && doc.dept_ids && doc.dept_ids.length > 0) {
+        return doc.dept_ids.includes(profile.dept_id);
+    }
+
+    return true;
+};
+
+// Filter a list of documents by user access
+export const filterDocumentsByAccess = (docs, profile) => {
+    if (!profile) return [];
+    return docs.filter(doc => canUserViewDocument(doc, profile));
+};
+
+// Access level display info
+export const ACCESS_LEVEL_INFO = {
+    PUBLIC: { label: 'Public', color: '#22c55e', description: 'Anyone can view' },
+    STUDENT: { label: 'Student', color: '#3b82f6', description: 'Students + Teachers + HOD' },
+    STAFF: { label: 'Staff', color: '#f59e0b', description: 'Teachers + HOD only' },
+    CONFIDENTIAL: { label: 'Confidential', color: '#ef4444', description: 'HOD + Admin only' },
+    PRIVATE: { label: 'Private', color: '#6b7280', description: 'Only you + Admin' },
+};
+
+// Expiry options for the upload form
+export const EXPIRY_OPTIONS = [
+    { value: '', label: 'Permanent (no expiry)' },
+    { value: '7', label: '1 week' },
+    { value: '14', label: '2 weeks' },
+    { value: '30', label: '1 month' },
+    { value: '60', label: '2 months' },
+    { value: '90', label: '3 months' },
+    { value: '180', label: '6 months' },
+];
+
+export const calculateExpiryDate = (daysStr) => {
+    if (!daysStr) return null;
+    const d = new Date();
+    d.setDate(d.getDate() + Number(daysStr));
+    return d.toISOString();
+};
+
+// ---- Helper Functions ----
 
 export const getTagColor = (tag) => {
     if (tag.type === 'PRIORITY') return tag.color;

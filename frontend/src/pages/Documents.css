@@ -125,9 +125,31 @@
     color: var(--color-primary);
 }
 
+.doc-card-header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.doc-access-badge {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 1px 6px;
+    border: 1px solid;
+    border-radius: var(--radius-full);
+}
+
 .doc-card-size {
     font-size: var(--fs-xs);
     color: var(--color-text-muted);
+}
+
+.doc-expiry-badge {
+    font-size: var(--fs-xs);
+    color: var(--color-accent);
+    font-weight: 500;
 }
 
 .doc-card-title {

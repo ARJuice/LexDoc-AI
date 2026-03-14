@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { UploadCloud, FileText, CheckCircle2, Loader2, X, Plus } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, X, Plus, Lock, Info } from 'lucide-react';
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
-import { fetchDepartments, fetchTags, uploadDocument } from '../lib/supabaseData';
+import {
+    fetchDepartments, fetchTags, uploadDocument,
+    getAllowedAccessLevels, ACCESS_LEVEL_INFO, EXPIRY_OPTIONS, calculateExpiryDate
+} from '../lib/supabaseData';
 import './Upload.css';
 
 const extractTitleFromFilename = (filename) => {
@@ -22,10 +25,16 @@ export default function Upload() {
     const [tags, setTags] = useState([]);
     const [dragActive, setDragActive] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
-    const [formData, setFormData] = useState({ title: '', dept: '', tags: [], customTags: [], visibility: 'department' });
+    const [formData, setFormData] = useState({
+        title: '', dept: '', tags: [], customTags: [],
+        accessLevel: 'PUBLIC', expiryDays: ''
+    });
     const [customTagInput, setCustomTagInput] = useState('');
-    const [processing, setProcessing] = useState(null); // null | 'uploading' | 'complete' | 'error'
+    const [processing, setProcessing] = useState(null);
     const [uploadError, setUploadError] = useState('');
+
+    const roleLevel = profile?.roles?.access_level || 0;
+    const allowedLevels = getAllowedAccessLevels(roleLevel);
 
     useEffect(() => {
         fetchDepartments().then(setDepartments);
@@ -48,18 +57,20 @@ export default function Upload() {
         setProcessing('uploading');
         setUploadError('');
 
-        // Animate progress bar
         if (progressRef.current) {
             gsap.to(progressRef.current, { width: '60%', duration: 1.5, ease: 'power2.out' });
         }
 
         try {
+            const isPrivate = formData.accessLevel === 'PRIVATE';
             await uploadDocument(selectedFile, {
                 title: formData.title.trim(),
                 deptId: formData.dept || (profile?.dept_id),
                 tagIds: formData.tags,
-                isGeneral: formData.visibility === 'general',
+                isGeneral: formData.accessLevel === 'PUBLIC',
                 uploaderId: profile?.id,
+                accessLevel: formData.accessLevel,
+                expiryDate: calculateExpiryDate(formData.expiryDays),
             });
 
             if (progressRef.current) {
@@ -119,6 +130,8 @@ export default function Upload() {
         if (e.key === 'Enter') { e.preventDefault(); addCustomTag(); }
     };
 
+    const isPrivate = formData.accessLevel === 'PRIVATE';
+
     return (
         <div ref={pageRef} className="page-container upload-page">
             <h2 className="page-title">Upload Document</h2>
@@ -163,14 +176,43 @@ export default function Upload() {
                         />
                     </div>
 
+                    {/* Access Level */}
                     <div className="form-group">
-                        <label>Department</label>
-                        <select value={formData.dept} onChange={(e) => setFormData({ ...formData, dept: e.target.value })}>
-                            <option value="">Select department</option>
-                            {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                        </select>
+                        <label><Lock size={14} /> Access Level</label>
+                        <div className="access-level-grid">
+                            {allowedLevels.map(level => {
+                                const info = ACCESS_LEVEL_INFO[level];
+                                const isSelected = formData.accessLevel === level;
+                                return (
+                                    <button
+                                        key={level}
+                                        type="button"
+                                        className={`access-level-btn ${isSelected ? 'selected' : ''}`}
+                                        style={isSelected ? { borderColor: info.color, color: info.color, background: info.color + '15' } : {}}
+                                        onClick={() => setFormData({ ...formData, accessLevel: level })}
+                                        data-hoverable
+                                    >
+                                        {level === 'PRIVATE' && <Lock size={12} />}
+                                        <span className="access-level-name">{info.label}</span>
+                                        <span className="access-level-desc">{info.description}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
 
+                    {/* Department (hidden if PRIVATE or PUBLIC) */}
+                    {!isPrivate && formData.accessLevel !== 'PUBLIC' && (
+                        <div className="form-group">
+                            <label>Department</label>
+                            <select value={formData.dept} onChange={(e) => setFormData({ ...formData, dept: e.target.value })}>
+                                <option value="">Select department</option>
+                                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                            </select>
+                        </div>
+                    )}
+
+                    {/* Tags */}
                     <div className="form-group">
                         <label>Tags</label>
                         <div className="tags-selection">
@@ -230,20 +272,17 @@ export default function Upload() {
                         </div>
                     </div>
 
+                    {/* Document Expiry */}
                     <div className="form-group">
-                        <label>Visibility</label>
-                        <div className="form-radio-group">
-                            <label className="form-radio" data-hoverable>
-                                <input type="radio" name="visibility" value="department" checked={formData.visibility === 'department'} onChange={() => setFormData({ ...formData, visibility: 'department' })} />
-                                <span className="radio-custom"></span>
-                                <span>Department Only</span>
-                            </label>
-                            <label className="form-radio" data-hoverable>
-                                <input type="radio" name="visibility" value="general" checked={formData.visibility === 'general'} onChange={() => setFormData({ ...formData, visibility: 'general' })} />
-                                <span className="radio-custom"></span>
-                                <span>General (All Departments)</span>
-                            </label>
-                        </div>
+                        <label>Document Expiry</label>
+                        <select value={formData.expiryDays} onChange={(e) => setFormData({ ...formData, expiryDays: e.target.value })}>
+                            {EXPIRY_OPTIONS.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </select>
+                        <span className="form-hint">
+                            <Info size={12} /> Documents without an expiry date are permanent. Otherwise, they will be automatically removed after the chosen period.
+                        </span>
                     </div>
 
                     <button className="btn btn-primary upload-submit" onClick={handleUpload} disabled={!selectedFile || !formData.title.trim() || processing === 'uploading'} data-hoverable>

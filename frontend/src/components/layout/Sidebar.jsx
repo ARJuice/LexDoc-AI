@@ -13,8 +13,8 @@ import './Sidebar.css';
 const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/documents', label: 'Documents', icon: FileText },
-    { path: '/upload', label: 'Upload', icon: Upload },
-    { path: '/my-uploads', label: 'My Uploads', icon: FolderUp },
+    { path: '/upload', label: 'Upload', icon: Upload, minAccess: 5 },
+    { path: '/my-uploads', label: 'My Uploads', icon: FolderUp, minAccess: 5 },
     { path: '/insights', label: 'AI Insights', icon: Sparkles },
     { divider: true },
     { path: '/admin/users', label: 'Users', icon: Users, minAccess: 10 },
