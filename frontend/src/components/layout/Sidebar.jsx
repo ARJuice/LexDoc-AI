@@ -1,7 +1,6 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleSidebar } from '../../store/store';
-import { useAuth } from '../../context/AuthProvider';
 import {
     LayoutDashboard, FileText, Upload, Sparkles, Users, Building2,
     ClipboardList, User, LogOut, ChevronLeft, ChevronRight, FolderUp
@@ -13,13 +12,13 @@ import './Sidebar.css';
 const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/documents', label: 'Documents', icon: FileText },
-    { path: '/upload', label: 'Upload', icon: Upload, minAccess: 5 },
-    { path: '/my-uploads', label: 'My Uploads', icon: FolderUp, minAccess: 5 },
+    { path: '/upload', label: 'Upload', icon: Upload },
+    { path: '/my-uploads', label: 'My Uploads', icon: FolderUp },
     { path: '/insights', label: 'AI Insights', icon: Sparkles },
     { divider: true },
-    { path: '/admin/users', label: 'Users', icon: Users, minAccess: 10 },
-    { path: '/admin/departments', label: 'Departments', icon: Building2, minAccess: 10 },
-    { path: '/admin/audit', label: 'Audit Logs', icon: ClipboardList, minAccess: 10 },
+    { path: '/admin/users', label: 'Users', icon: Users, admin: true },
+    { path: '/admin/departments', label: 'Departments', icon: Building2, admin: true },
+    { path: '/admin/audit', label: 'Audit Logs', icon: ClipboardList, admin: true },
     { divider: true },
     { path: '/profile', label: 'Profile', icon: User },
 ];
@@ -28,9 +27,7 @@ export default function Sidebar() {
     const collapsed = useSelector((s) => s.sidebar.collapsed);
     const dispatch = useDispatch();
     const sidebarRef = useRef(null);
-    const { profile, signOut } = useAuth();
-
-    const userAccessLevel = profile?.roles?.access_level || 0;
+    const location = useLocation();
 
     useEffect(() => {
         const el = sidebarRef.current;
@@ -38,25 +35,10 @@ export default function Sidebar() {
         gsap.to(el, {
             width: collapsed ? 72 : 260,
             duration: 0.4,
+            delay: collapsed ? 0.3 : 0,
             ease: 'power2.inOut',
         });
     }, [collapsed]);
-
-    // Filter out items that the user doesn't have access to
-    const visibleItems = navItems.filter(item => {
-        if (item.divider) return true;
-        if (item.minAccess && userAccessLevel < item.minAccess) return false;
-        return true;
-    });
-
-    // Remove consecutive/trailing dividers
-    const cleanedItems = visibleItems.filter((item, i, arr) => {
-        if (!item.divider) return true;
-        // Skip if it's the first or last item, or if previous was also a divider
-        if (i === 0 || i === arr.length - 1) return false;
-        if (arr[i - 1]?.divider) return false;
-        return true;
-    });
 
     return (
         <aside ref={sidebarRef} className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
@@ -70,7 +52,7 @@ export default function Sidebar() {
 
             {/* Navigation */}
             <nav className="sidebar-nav">
-                {cleanedItems.map((item, i) => {
+                {navItems.map((item, i) => {
                     if (item.divider) return <div key={i} className="sidebar-divider" />;
                     const Icon = item.icon;
                     return (
@@ -78,7 +60,7 @@ export default function Sidebar() {
                             key={item.path}
                             to={item.path}
                             className={({ isActive }) =>
-                                `sidebar-link ${isActive ? 'active' : ''} ${item.minAccess ? 'admin-link' : ''}`
+                                `sidebar-link ${isActive ? 'active' : ''} ${item.admin ? 'admin-link' : ''}`
                             }
                             data-hoverable
                         >

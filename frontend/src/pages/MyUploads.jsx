@@ -19,8 +19,8 @@ export default function MyUploads() {
     const [filterTag, setFilterTag] = useState('all');
     const [sortByDate, setSortByDate] = useState('newest');
     const [viewMode, setViewMode] = useState('grid');
-
-    const [allDocs, setAllDocs] = useState([]);
+    
+    const [documents, setDocuments] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [tags, setTags] = useState([]);
     const [summaries, setSummaries] = useState([]);
@@ -31,14 +31,13 @@ export default function MyUploads() {
             const [docs, depts, t, sums] = await Promise.all([
                 fetchDocuments(), fetchDepartments(), fetchTags(), fetchSummaries()
             ]);
-            setAllDocs(docs); setDepartments(depts); setTags(t); setSummaries(sums);
+            setDocuments(docs); setDepartments(depts); setTags(t); setSummaries(sums);
             setLoading(false);
         }
         load();
     }, []);
 
-    // Show ALL of user's own uploads, including PRIVATE
-    const myDocs = profile ? allDocs.filter(doc => doc.uploader_id === profile.id) : [];
+    const myDocs = profile ? documents.filter(doc => doc.uploader_id === profile.id) : [];
 
     const getDocTags = (doc) => (doc.tag_ids || []).map(id => tags.find(t => t.id === id)).filter(Boolean);
     const getDocDepts = (doc) => (doc.dept_ids || []).map(id => departments.find(d => d.id === id)).filter(Boolean);
@@ -78,6 +77,7 @@ export default function MyUploads() {
         return <div className="page-container"><p style={{ color: 'var(--color-text-muted)' }}>Loading your uploads...</p></div>;
     }
 
+
     return (
         <div ref={pageRef} className="page-container documents-page">
             <div className="docs-header">
@@ -88,7 +88,12 @@ export default function MyUploads() {
                 <div className="docs-toolbar">
                     <div className="docs-search">
                         <Search size={16} />
-                        <input type="text" placeholder="Search your uploads..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                        <input
+                            type="text"
+                            placeholder="Search your uploads..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
                     </div>
                     <select className="docs-filter" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
                         <option value="all">All Departments</option>
@@ -114,27 +119,21 @@ export default function MyUploads() {
 
             <div className={`docs-grid ${viewMode}`}>
                 {filteredDocs.map(doc => {
-                    const docTags = sortTagsByPriority(getDocTags(doc));
-                    const docDepts = getDocDepts(doc);
-                    const summary = getSummary(doc.id);
-                    const levelInfo = ACCESS_LEVEL_INFO[doc.access_level] || ACCESS_LEVEL_INFO.PUBLIC;
-                    const isRestricted = doc.access_level === 'PRIVATE' || doc.access_level === 'CONFIDENTIAL';
+                    const docTags = sortTagsByPriority(getDocumentTags(doc));
+                    const docDepts = getDocumentDepartments(doc);
+                    const summary = getSummaryByDocId(doc.id);
                     return (
                         <div key={doc.id} className="doc-card card" onClick={() => navigate(`/documents/${doc.id}`)} data-hoverable>
                             <div className="doc-card-header">
                                 <FileText size={20} className="doc-card-icon" />
-                                <div className="doc-card-header-right">
-                                    {isRestricted && <Lock size={14} style={{ color: levelInfo.color }} />}
-                                    <span className="doc-access-badge" style={{ color: levelInfo.color, borderColor: levelInfo.color }}>
-                                        {levelInfo.label}
-                                    </span>
-                                    <span className="doc-card-size">{formatFileSize(doc.file_size)}</span>
-                                </div>
+                                <span className="doc-card-size">{formatFileSize(doc.file_size)}</span>
                             </div>
                             <h4 className="doc-card-title">{doc.title}</h4>
                             {summary && <p className="doc-card-summary">{summary.content.slice(0, 120)}...</p>}
                             <div className="doc-card-dept">
-                                {docDepts.length > 0 ? docDepts.map(d => d.name).join(', ') : doc.is_general ? 'General' : '—'}
+                                {docDepts.length > 0
+                                    ? docDepts.map(d => d.name).join(', ')
+                                    : doc.is_general ? 'General' : '—'}
                             </div>
                             <div className="doc-card-tags">
                                 {docTags.map(tag => {
@@ -148,9 +147,6 @@ export default function MyUploads() {
                             </div>
                             <div className="doc-card-footer">
                                 <span>{formatDate(doc.uploaded_at)}</span>
-                                {doc.expiry_date && (
-                                    <span className="doc-expiry-badge">Expires {formatDate(doc.expiry_date)}</span>
-                                )}
                             </div>
                         </div>
                     );
