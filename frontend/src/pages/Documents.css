@@ -18,21 +18,26 @@
     min-width: 200px;
     max-width: 360px;
     padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-    color: var(--color-text-muted);
-    transition: border-color var(--transition-fast);
+
+    /* Minimal Glass */
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
+
+    color: var(--text-muted);
+    transition: all var(--transition-fast);
 }
 
 .docs-search:focus-within {
-    border-color: var(--color-primary);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-light);
 }
 
 .docs-search input {
     border: none;
     background: transparent;
-    color: var(--color-text);
+    color: var(--text-primary);
     font-size: var(--fs-sm);
     width: 100%;
     outline: none;
@@ -40,17 +45,20 @@
 
 .docs-filter {
     padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-    color: var(--color-text);
+    /* Minimal Glass */
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
+
+    color: var(--text-primary);
     font-size: var(--fs-sm);
     outline: none;
-    transition: border-color var(--transition-fast);
+    transition: all var(--transition-fast);
 }
 
 .docs-filter:focus {
-    border-color: var(--color-primary);
+    border-color: var(--accent);
 }
 
 .docs-sort-wrap {
@@ -62,21 +70,23 @@
 
 .view-toggle {
     display: flex;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
     overflow: hidden;
 }
 
 .view-toggle button {
     padding: var(--space-2) var(--space-3);
-    color: var(--color-text-muted);
-    background: var(--color-surface);
+    color: var(--text-muted);
+    background: transparent;
     transition: all var(--transition-fast);
 }
 
 .view-toggle button.active {
-    background: var(--color-primary-light);
-    color: var(--color-primary);
+    background: var(--color-surface);
+    color: var(--accent);
 }
 
 /* Document Grid */
@@ -112,6 +122,18 @@
 
 .doc-card {
     padding: var(--space-5);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    transition: all var(--transition-fast);
+}
+
+.doc-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--text-muted);
 }
 
 .doc-card-header {
@@ -122,7 +144,7 @@
 }
 
 .doc-card-icon {
-    color: var(--color-primary);
+    color: var(--text-primary);
 }
 
 .doc-card-header-right {
@@ -148,7 +170,7 @@
 
 .doc-expiry-badge {
     font-size: var(--fs-xs);
-    color: var(--color-accent);
+    color: var(--color-danger);
     font-weight: 500;
 }
 
@@ -156,12 +178,12 @@
     font-size: var(--fs-base);
     font-weight: 600;
     margin-bottom: var(--space-2);
-    color: var(--color-text);
+    color: var(--text-primary);
 }
 
 .doc-card-summary {
     font-size: var(--fs-sm);
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     line-height: 1.5;
     margin-bottom: var(--space-3);
     display: -webkit-box;
@@ -188,7 +210,7 @@
     display: flex;
     justify-content: space-between;
     font-size: var(--fs-xs);
-    color: var(--color-text-muted);
+    color: var(--text-muted);
 }
 
 .docs-empty {
@@ -197,6 +219,6 @@
     align-items: center;
     justify-content: center;
     padding: var(--space-16);
-    color: var(--color-text-muted);
+    color: var(--text-muted);
     gap: var(--space-3);
 }

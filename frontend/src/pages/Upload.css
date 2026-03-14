@@ -16,10 +16,15 @@
     align-items: center;
     justify-content: center;
     padding: var(--space-12);
-    border: 2px dashed var(--color-border);
+    border: 2px dashed var(--glass-border);
     border-radius: var(--radius-xl);
-    background: var(--color-surface);
-    color: var(--color-text-muted);
+
+    /* Mix of glass and subtle background */
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+
+    color: var(--text-muted);
     gap: var(--space-3);
     text-align: center;
     transition: all var(--transition-base);
@@ -28,14 +33,14 @@
 
 .upload-zone:hover,
 .upload-zone.active {
-    border-color: var(--color-primary);
-    background: var(--color-primary-light);
-    color: var(--color-primary);
+    border-color: var(--text-primary);
+    background: var(--color-surface);
+    color: var(--text-primary);
 }
 
 .upload-zone.has-file {
     border-style: solid;
-    border-color: var(--color-primary);
+    border-color: var(--text-primary);
 }
 
 .upload-zone span {
@@ -47,12 +52,12 @@
     flex-direction: column;
     align-items: center;
     gap: var(--space-2);
-    color: var(--color-primary);
+    color: var(--text-primary);
 }
 
 .upload-zone-filename {
     font-weight: 600;
-    color: var(--color-text);
+    color: var(--text-primary);
 }
 
 .upload-zone-size {
@@ -79,19 +84,21 @@
 .form-group select {
     width: 100%;
     padding: var(--space-3) var(--space-4);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
-    background: var(--color-surface);
-    color: var(--color-text);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    color: var(--text-primary);
     font-size: var(--fs-sm);
     outline: none;
-    transition: border-color var(--transition-fast);
+    transition: all var(--transition-fast);
 }
 
 .form-group input:focus,
 .form-group select:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-light);
+    border-color: var(--accent);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 3px var(--accent-light);
 }
 
 .form-tags {
@@ -102,12 +109,12 @@
 
 .form-tag {
     padding: var(--space-1) var(--space-3);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-full);
     font-size: var(--fs-xs);
     font-weight: 500;
-    color: var(--color-text-secondary);
-    background: var(--color-surface);
+    color: var(--text-secondary);
+    background: var(--glass-bg);
     transition: all var(--transition-fast);
 }
 
@@ -156,18 +163,19 @@
 .custom-tag-input-row input {
     flex: 1;
     padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
-    background: var(--color-surface);
-    color: var(--color-text);
+    background: var(--glass-bg);
+    color: var(--text-primary);
     font-size: var(--fs-sm);
     outline: none;
-    transition: border-color var(--transition-fast);
+    transition: all var(--transition-fast);
 }
 
 .custom-tag-input-row input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-light);
+    border-color: var(--accent);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 3px var(--accent-light);
 }
 
 .custom-tag-add-btn {
@@ -307,15 +315,16 @@
     align-items: flex-start;
     gap: 2px;
     padding: var(--space-3);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
-    background: var(--color-surface);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
     text-align: left;
     transition: all var(--transition-fast);
 }
 
 .access-level-btn:hover {
-    border-color: var(--color-primary);
+    border-color: var(--text-primary);
 }
 
 .access-level-btn.selected {

@@ -1,25 +1,24 @@
 .app-layout {
     display: flex;
     min-height: 100vh;
-    background: var(--color-bg);
-    transition: background-color var(--transition-slow);
+    background: transparent;
+    /* Let body orbs show through */
 }
 
 .app-main {
     flex: 1;
-    margin-left: var(--sidebar-width);
-    background: var(--color-bg);
+    margin-left: calc(var(--sidebar-width) + 40px);
+    background: transparent;
     transition: margin-left 0.4s ease;
 }
 
 .app-main.sidebar-collapsed {
-    margin-left: var(--sidebar-collapsed);
+    margin-left: calc(var(--sidebar-collapsed) + 40px);
 }
 
 .app-content {
-    margin-top: var(--topbar-height);
-    min-height: calc(100vh - var(--topbar-height));
+    margin-top: calc(var(--topbar-height) + 20px);
+    min-height: calc(100vh - var(--topbar-height) - 40px);
     padding: var(--space-8);
-    background: var(--color-bg);
-    transition: background-color var(--transition-slow);
+    background: transparent;
 }

@@ -48,28 +48,28 @@ export default function Profile() {
         <div ref={pageRef} className="page-container profile-page">
             <h2 className="page-title"><User size={28} className="title-icon" /> My Profile</h2>
 
-            <div className="profile-card card">
+            <div className="profile-card glass-card">
                 <div className="profile-avatar">
                     {profile?.username?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
                 <div className="profile-details">
-                    <div className="profile-item">
+                    <div className="profile-row">
                         <span className="profile-label">Name</span>
                         <span className="profile-value">{displayName}</span>
                     </div>
-                    <div className="profile-item">
+                    <div className="profile-row">
                         <span className="profile-label">Email</span>
                         <span className="profile-value">{profile?.email || '—'}</span>
                     </div>
-                    <div className="profile-item">
+                    <div className="profile-row">
                         <span className="profile-label">Department</span>
                         <span className="profile-value">{department?.name || '—'}</span>
                     </div>
-                    <div className="profile-item">
+                    <div className="profile-row">
                         <span className="profile-label">Role</span>
                         <span className="profile-value">{role?.name || '—'}</span>
                     </div>
-                    <div className="profile-item">
+                    <div className="profile-row">
                         <span className="profile-label">Joined</span>
                         <span className="profile-value">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</span>
                     </div>

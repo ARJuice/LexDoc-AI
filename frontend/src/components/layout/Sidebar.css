@@ -1,16 +1,22 @@
 .sidebar {
     position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    width: 260px;
-    background: var(--color-sidebar);
-    border-right: 1px solid var(--color-border);
+    top: 20px;
+    left: 20px;
+    height: calc(100vh - 40px);
+    width: var(--sidebar-width);
+
+    /* Glassmorphism */
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+
     display: flex;
     flex-direction: column;
     z-index: 100;
-    transition: background-color var(--transition-slow),
-        border-color var(--transition-slow);
+    transition: width 0.4s ease, background-color var(--transition-slow);
     overflow: hidden;
 }
 
@@ -46,20 +52,32 @@
 
 .sidebar-nav {
     flex: 1;
-    padding: var(--space-3) var(--space-3);
+    padding: var(--space-3);
     display: flex;
     flex-direction: column;
     gap: 2px;
     overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--glass-border) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: var(--radius-full);
 }
 
 .sidebar-link {
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    padding: var(--space-3) var(--space-3);
+    padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-size: var(--fs-sm);
     font-weight: 500;
     transition: all var(--transition-fast);
@@ -69,12 +87,13 @@
 
 .sidebar-link:hover {
     background: var(--color-surface-hover);
-    color: var(--color-text);
+    color: var(--text-primary);
+    transform: translateX(4px);
 }
 
 .sidebar-link.active {
-    background: var(--color-primary-light);
-    color: var(--color-primary);
+    background: var(--accent-light);
+    color: var(--accent);
     font-weight: 600;
 }
 
@@ -107,11 +126,11 @@
     justify-content: center;
     padding: var(--space-4);
     border-top: 1px solid var(--color-border);
-    color: var(--color-text-muted);
+    color: var(--text-muted);
     transition: all var(--transition-fast);
 }
 
 .sidebar-toggle:hover {
-    color: var(--color-primary);
+    color: var(--text-primary);
     background: var(--color-surface-hover);
 }
