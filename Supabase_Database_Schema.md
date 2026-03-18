@@ -49,13 +49,13 @@ Application users.
 | `created_at` | TIMESTAMP | Creation time |
 
 #### 4. tags
-Unified tagging system. Priority tags use weight for sorting: High = 100, Medium = 50, Low = 10.
+Unified tagging system. Types: `PRIORITY` (High/Medium/Low with weight for sorting), `LABEL` (seeded named labels like Urgent/General), `CUSTOM` (user-created tags, stored lowercase for deduplication).
 | Column | Type | Description |
 | --- | --- | --- |
 | `id` | PK | Tag ID |
-| `name` | TEXT | Tag name |
-| `type` | TEXT | `PRIORITY` or `LABEL` |
-| `weight` | INTEGER | Tag weight |
+| `name` | TEXT UNIQUE(ilike) | Tag name (case-insensitive unique via index on lower(name)) |
+| `type` | TEXT | `PRIORITY`, `LABEL`, or `CUSTOM` |
+| `weight` | INTEGER | Tag weight for sorting |
 | `color` | TEXT | UI Color |
 
 #### 5. documents
@@ -84,7 +84,7 @@ Controls document visibility between departments. (Composite PK: `doc_id`, `dept
 | `dept_id` | FK |
 
 #### 7. document_tags
-Associates documents with labels and priorities. (Composite PK: `doc_id`, `tag_id`)
+Junction table: associates documents with tags (both preset PRIORITY/LABEL and user-created CUSTOM). **This is NOT a duplicate of `tags`** — it is the Many-to-Many link table between `documents` and `tags`. (Composite PK: `doc_id`, `tag_id`)
 | Column | Type |
 | --- | --- |
 | `doc_id` | FK |
@@ -196,10 +196,12 @@ CREATE TABLE document_departments (
 CREATE TABLE tags (
  id SERIAL PRIMARY KEY,
  name TEXT NOT NULL,
- type TEXT CHECK (type IN ('PRIORITY', 'LABEL')),
+ type TEXT CHECK (type IN ('PRIORITY', 'LABEL', 'CUSTOM')),
  weight INTEGER,
  color TEXT
 );
+-- Case-insensitive uniqueness to prevent duplicate custom tags
+CREATE UNIQUE INDEX idx_tags_name_lower ON tags (lower(name));
 
 CREATE TABLE document_tags (
  doc_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
@@ -250,13 +252,24 @@ CREATE TABLE notifications (
 ## 6. Performance Optimizations (Indexes)
 
 ```sql
-CREATE INDEX idx_documents_uploaded_at ON documents(uploaded_at);
-CREATE INDEX idx_documents_uploader_id ON documents(uploader_id);
-CREATE INDEX idx_summaries_doc_id ON summaries(doc_id);
-CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
-CREATE INDEX idx_events_doc_id ON events(doc_id);
-CREATE INDEX idx_events_event_date ON events(event_date);
-CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+-- Documents
+CREATE INDEX IF NOT EXISTS idx_documents_uploaded_at       ON documents(uploaded_at);
+CREATE INDEX IF NOT EXISTS idx_documents_uploader_id       ON documents(uploader_id);
+CREATE INDEX IF NOT EXISTS idx_documents_access_level      ON documents(access_level);
+CREATE INDEX IF NOT EXISTS idx_documents_is_general        ON documents(is_general);
+-- Tags & Junctions
+CREATE INDEX IF NOT EXISTS idx_document_tags_doc_id        ON document_tags(doc_id);
+CREATE INDEX IF NOT EXISTS idx_document_tags_tag_id        ON document_tags(tag_id);
+CREATE INDEX IF NOT EXISTS idx_document_departments_doc_id ON document_departments(doc_id);
+-- Supporting tables
+CREATE INDEX IF NOT EXISTS idx_summaries_doc_id            ON summaries(doc_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id          ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_doc_id           ON audit_logs(doc_id);
+CREATE INDEX IF NOT EXISTS idx_events_doc_id               ON events(doc_id);
+CREATE INDEX IF NOT EXISTS idx_events_event_date           ON events(event_date);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id       ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_users_role_id               ON users(role_id);
+CREATE INDEX IF NOT EXISTS idx_users_dept_id               ON users(dept_id);
 ```
 
 ---

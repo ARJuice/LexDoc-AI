@@ -195,7 +195,7 @@ export async function uploadDocument(file, { title, deptId, tagIds, customTags =
                 // Create new label tag with lowercase name
                 const { data: newTag, error: tagErr } = await supabase
                     .from('tags')
-                    .insert({ name: normalized, type: 'LABEL', weight: 1, color: '#6B7280' })
+                    .insert({ name: normalized, type: 'CUSTOM', weight: 1, color: '#6B7280' })
                     .select('id')
                     .single();
                 if (tagErr) { console.error('Custom tag insert error:', tagErr); continue; }

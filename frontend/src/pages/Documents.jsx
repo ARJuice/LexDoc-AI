@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Search, Grid3x3, List, ArrowDownUp, Lock, Shield } from 'lucide-react';
+import { FileText, Search, Grid3x3, List, ArrowDownUp, Lock, Tag, ChevronDown } from 'lucide-react';
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
 import {
@@ -16,9 +16,13 @@ export default function Documents() {
     const { profile } = useAuth();
     const [search, setSearch] = useState('');
     const [filterDept, setFilterDept] = useState('all');
-    const [filterTag, setFilterTag] = useState('all');
+    // Tag filter: either a preset tag ID (number) or '' for "all"
+    const [filterTagId, setFilterTagId] = useState('all');
+    // Custom tag text search (matches tag names)
+    const [tagSearch, setTagSearch] = useState('');
     const [sortByDate, setSortByDate] = useState('newest');
     const [viewMode, setViewMode] = useState('grid');
+    const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
 
     const [documents, setDocuments] = useState([]);
     const [departments, setDepartments] = useState([]);
@@ -44,12 +48,29 @@ export default function Documents() {
     const getDocDepts = (doc) => (doc.dept_ids || []).map(id => departments.find(d => d.id === id)).filter(Boolean);
     const getSummary = (docId) => summaries.find(s => s.doc_id === docId);
 
+    // Split tags into preset (PRIORITY + LABEL) vs custom
+    const presetTags = tags.filter(t => t.type === 'PRIORITY' || t.type === 'LABEL');
+    const priorityTags = tags.filter(t => t.type === 'PRIORITY');
+    const labelTags = tags.filter(t => t.type === 'LABEL');
+
+    // Determine active tag filter label for the dropdown button
+    const activeTagLabel = filterTagId === 'all'
+        ? 'All Tags'
+        : (tags.find(t => t.id === Number(filterTagId))?.name ?? 'All Tags');
+
     const filteredDocs = accessibleDocs
         .filter(doc => {
             const matchesSearch = doc.title.toLowerCase().includes(search.toLowerCase());
             const matchesDept = filterDept === 'all' || (doc.dept_ids || []).includes(Number(filterDept)) || doc.is_general;
-            const matchesTag = filterTag === 'all' || (doc.tag_ids || []).includes(Number(filterTag));
-            return matchesSearch && matchesDept && matchesTag;
+
+            // Preset tag filter (by ID)
+            const matchesTagId = filterTagId === 'all' || (doc.tag_ids || []).includes(Number(filterTagId));
+
+            // Custom tag text search (by name substring across all linked tags)
+            const docTagNames = getDocTags(doc).map(t => t.name.toLowerCase());
+            const matchesTagSearch = !tagSearch.trim() || docTagNames.some(n => n.includes(tagSearch.trim().toLowerCase()));
+
+            return matchesSearch && matchesDept && matchesTagId && matchesTagSearch;
         })
         .sort((left, right) => {
             const leftDate = new Date(left.uploaded_at);
@@ -72,7 +93,16 @@ export default function Documents() {
             { opacity: 0, y: 20, scale: 0.97 },
             { opacity: 1, y: 0, scale: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out' }
         );
-    }, [search, filterDept, filterTag, sortByDate, viewMode, loading]);
+    }, [search, filterDept, filterTagId, tagSearch, sortByDate, viewMode, loading]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handler = (e) => {
+            if (!e.target.closest('.tag-search-bar')) setTagDropdownOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
 
     if (loading) {
         return <div className="page-container"><p style={{ color: 'var(--color-text-muted)' }}>Loading documents...</p></div>;
@@ -83,6 +113,7 @@ export default function Documents() {
             <div className="docs-header">
                 <h2 className="page-title">Documents</h2>
                 <div className="docs-toolbar">
+                    {/* Document title search */}
                     <div className="docs-search">
                         <Search size={16} />
                         <input type="text" placeholder="Search documents..." value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -91,10 +122,73 @@ export default function Documents() {
                         <option value="all">All Departments</option>
                         {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
-                    <select className="docs-filter" value={filterTag} onChange={(e) => setFilterTag(e.target.value)}>
-                        <option value="all">All Tags</option>
-                        {tags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                    </select>
+
+                    {/* Combined tag search bar: priority/label dropdown + custom tag text */}
+                    <div className={`tag-search-bar${tagDropdownOpen ? ' open' : ''}`}>
+                        <Tag size={14} className="tag-search-icon" />
+                        <button
+                            type="button"
+                            className="tag-preset-trigger"
+                            onClick={() => setTagDropdownOpen(v => !v)}
+                            data-hoverable
+                        >
+                            <span>{activeTagLabel}</span>
+                            <ChevronDown size={12} className={`tag-chevron${tagDropdownOpen ? ' rotated' : ''}`} />
+                        </button>
+                        <span className="tag-search-divider" />
+                        <input
+                            type="text"
+                            className="tag-search-input"
+                            placeholder="Search custom tags..."
+                            value={tagSearch}
+                            onChange={(e) => setTagSearch(e.target.value)}
+                        />
+                        {/* Dropdown panel */}
+                        {tagDropdownOpen && (
+                            <div className="tag-dropdown">
+                                <button
+                                    className={`tag-dropdown-item${filterTagId === 'all' ? ' active' : ''}`}
+                                    onClick={() => { setFilterTagId('all'); setTagDropdownOpen(false); }}
+                                    data-hoverable
+                                >All Tags</button>
+                                {priorityTags.length > 0 && (
+                                    <>
+                                        <span className="tag-dropdown-section">Priority</span>
+                                        {priorityTags.map(t => (
+                                            <button
+                                                key={t.id}
+                                                className={`tag-dropdown-item${filterTagId === String(t.id) ? ' active' : ''}`}
+                                                style={{ '--tag-color': t.color }}
+                                                onClick={() => { setFilterTagId(String(t.id)); setTagDropdownOpen(false); }}
+                                                data-hoverable
+                                            >
+                                                <span className="tag-dot" style={{ background: t.color }} />
+                                                {t.name}
+                                            </button>
+                                        ))}
+                                    </>
+                                )}
+                                {labelTags.length > 0 && (
+                                    <>
+                                        <span className="tag-dropdown-section">Labels</span>
+                                        {labelTags.map(t => (
+                                            <button
+                                                key={t.id}
+                                                className={`tag-dropdown-item${filterTagId === String(t.id) ? ' active' : ''}`}
+                                                style={{ '--tag-color': t.color }}
+                                                onClick={() => { setFilterTagId(String(t.id)); setTagDropdownOpen(false); }}
+                                                data-hoverable
+                                            >
+                                                <span className="tag-dot" style={{ background: t.color }} />
+                                                {t.name}
+                                            </button>
+                                        ))}
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     <div className="docs-sort-wrap">
                         <ArrowDownUp size={16} />
                         <select className="docs-filter" value={sortByDate} onChange={(e) => setSortByDate(e.target.value)}>
