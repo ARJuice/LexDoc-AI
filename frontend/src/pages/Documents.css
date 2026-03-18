@@ -32,9 +32,13 @@
 }
 
 .docs-search:focus-within {
-    border-color: var(--color-primary);
+    border-color: rgba(255, 255, 255, 0.75);
     background: var(--glass-surface-hover);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 3px var(--color-primary-glow);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+.dark .docs-search:focus-within {
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.07), inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
 .docs-search input {
@@ -63,9 +67,13 @@
 }
 
 .docs-filter:focus {
-    border-color: var(--color-primary);
+    border-color: rgba(255, 255, 255, 0.75);
     background: var(--glass-surface-hover);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 3px var(--color-primary-glow);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+.dark .docs-filter:focus {
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.07), inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .docs-sort-wrap {
@@ -92,9 +100,15 @@
 }
 
 .view-toggle button.active {
-    background: var(--color-primary-glow);
+    background: rgba(255, 255, 255, 0.55);
     color: var(--text-primary);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-radius: var(--radius-full);
+}
+.dark .view-toggle button.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-primary);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 /* Document Grid */
@@ -107,51 +121,80 @@
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
 }
 
+/* === List View === */
 .docs-grid.list {
     grid-template-columns: 1fr;
+    gap: var(--space-3);
 }
 
 .docs-grid.list .doc-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: var(--space-5);
+    row-gap: var(--space-2);
+    padding: var(--space-4) var(--space-6);
+    align-items: center;
+}
+
+/* Icon — left column, spans both rows */
+.docs-grid.list .doc-card-header {
+    grid-column: 1;
+    grid-row: 1 / 3;
     display: flex;
     align-items: center;
-    gap: var(--space-4);
-    padding: var(--space-3) var(--space-5);
-}
-
-.docs-grid.list .doc-card-header {
-    display: contents;
-}
-
-.docs-grid.list .doc-card-icon {
-    order: 1;
     margin-bottom: 0;
 }
 
+/* Title + dept row */
 .docs-grid.list .doc-card-title {
-    order: 2;
+    grid-column: 2;
+    grid-row: 1;
+    font-size: var(--fs-sm);
+    font-weight: 600;
     margin-bottom: 0;
-    flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.docs-grid.list .doc-card-tags {
-    order: 3;
+/* Summary row below title */
+.docs-grid.list .doc-card-summary {
+    grid-column: 2;
+    grid-row: 2;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
     margin-bottom: 0;
 }
 
-.docs-grid.list .doc-card-header-right {
-    order: 4;
-}
-
-.docs-grid.list .doc-card-footer {
-    order: 5;
-    margin-left: var(--space-2);
-}
-
-.docs-grid.list .doc-card-summary,
+/* Dept label visible in list view */
 .docs-grid.list .doc-card-dept {
+    display: none;
+}
+
+/* Right meta column — badge + size + date stacked */
+.docs-grid.list .doc-card-header-right {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-4);
+    white-space: nowrap;
+}
+
+/* Hide tags in list view (noisy) */
+.docs-grid.list .doc-card-tags {
+    display: none;
+}
+
+/* Hide original footer (date moved to header-right area beneath) */
+.docs-grid.list .doc-card-footer {
     display: none;
 }
 
@@ -201,6 +244,16 @@
 .doc-card-size {
     font-size: var(--fs-xs);
     color: var(--color-text-muted);
+}
+
+/* Date — hidden in grid view (shown in footer), visible in list view */
+.doc-card-date {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    display: none;
+}
+.docs-grid.list .doc-card-date {
+    display: inline;
 }
 
 .doc-expiry-badge {

@@ -67,6 +67,7 @@ export default function Upload() {
                 title: formData.title.trim(),
                 deptId: formData.dept || (profile?.dept_id),
                 tagIds: formData.tags,
+                customTags: formData.customTags,
                 isGeneral: formData.accessLevel === 'PUBLIC',
                 uploaderId: profile?.id,
                 accessLevel: formData.accessLevel,

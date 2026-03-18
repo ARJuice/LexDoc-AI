@@ -126,10 +126,14 @@ export default function Documents() {
                                         {levelInfo.label}
                                     </span>
                                     <span className="doc-card-size">{formatFileSize(doc.file_size)}</span>
+                                    <span className="doc-card-date">{formatDate(doc.uploaded_at)}</span>
                                 </div>
                             </div>
                             <h4 className="doc-card-title">{doc.title}</h4>
-                            {summary && <p className="doc-card-summary">{summary.content.slice(0, 120)}...</p>}
+                            {summary
+                                ? <p className="doc-card-summary">{summary.content.slice(0, 120)}...</p>
+                                : <p className="doc-card-summary" style={{ fontStyle: 'italic' }}>No summary available yet.</p>
+                            }
                             <div className="doc-card-dept">
                                 {docDepts.length > 0 ? docDepts.map(d => d.name).join(', ') : doc.is_general ? 'General' : '—'}
                             </div>

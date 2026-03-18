@@ -131,7 +131,7 @@ export async function fetchAuditLogs() {
 
 // ---- Upload Functions ----
 
-export async function uploadDocument(file, { title, deptId, tagIds, isGeneral, uploaderId, accessLevel = 'PUBLIC', expiryDate = null }) {
+export async function uploadDocument(file, { title, deptId, tagIds, customTags = [], isGeneral, uploaderId, accessLevel = 'PUBLIC', expiryDate = null }) {
     // 1. Upload file to Supabase Storage
     const filePath = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
     const { error: storageError } = await supabase.storage
@@ -141,6 +141,9 @@ export async function uploadDocument(file, { title, deptId, tagIds, isGeneral, u
         console.error('Storage upload error:', storageError);
         throw storageError;
     }
+
+    // STAFF-level docs are also general (visible to all staff, no dept restriction)
+    const effectiveIsGeneral = isGeneral || accessLevel === 'PUBLIC' || accessLevel === 'STAFF';
 
     // 2. Insert document metadata
     const { data: doc, error: docError } = await supabase
@@ -152,7 +155,7 @@ export async function uploadDocument(file, { title, deptId, tagIds, isGeneral, u
             file_size: file.size,
             mime_type: file.type,
             processing_status: 'uploaded',
-            is_general: isGeneral,
+            is_general: effectiveIsGeneral,
             access_level: accessLevel,
             expiry_date: expiryDate,
             uploader_id: uploaderId,
@@ -162,17 +165,49 @@ export async function uploadDocument(file, { title, deptId, tagIds, isGeneral, u
     if (docError) { console.error('Document insert error:', docError); throw docError; }
 
     // 3. Insert department access (if not general and not private)
-    if (!isGeneral && accessLevel !== 'PRIVATE' && deptId) {
+    if (!effectiveIsGeneral && accessLevel !== 'PRIVATE' && deptId) {
         await supabase.from('document_departments').insert({ doc_id: doc.id, dept_id: Number(deptId) });
     }
 
-    // 4. Insert tags
+    // 4. Insert existing tags
     if (tagIds && tagIds.length > 0) {
         const tagRows = tagIds.map(tag_id => ({ doc_id: doc.id, tag_id }));
         await supabase.from('document_tags').insert(tagRows);
     }
 
-    // 5. Log the upload in audit_logs
+    // 5. Insert custom tags (case-insensitive upsert)
+    if (customTags && customTags.length > 0) {
+        for (const tagName of customTags) {
+            const normalized = tagName.trim().toLowerCase();
+            if (!normalized) continue;
+
+            // Check if tag already exists (case-insensitive)
+            const { data: existing } = await supabase
+                .from('tags')
+                .select('id')
+                .ilike('name', normalized)
+                .maybeSingle();
+
+            let tagId;
+            if (existing) {
+                tagId = existing.id;
+            } else {
+                // Create new label tag with lowercase name
+                const { data: newTag, error: tagErr } = await supabase
+                    .from('tags')
+                    .insert({ name: normalized, type: 'LABEL', weight: 1, color: '#6B7280' })
+                    .select('id')
+                    .single();
+                if (tagErr) { console.error('Custom tag insert error:', tagErr); continue; }
+                tagId = newTag.id;
+            }
+
+            // Link tag to document
+            await supabase.from('document_tags').insert({ doc_id: doc.id, tag_id: tagId }).onConflict('doc_id,tag_id').ignore();
+        }
+    }
+
+    // 6. Log the upload in audit_logs
     await supabase.from('audit_logs').insert({
         user_id: uploaderId,
         doc_id: doc.id,
@@ -227,9 +262,9 @@ export const filterDocumentsByAccess = (docs, profile) => {
 
 // Access level display info
 export const ACCESS_LEVEL_INFO = {
-    PUBLIC: { label: 'Public', color: '#22c55e', description: 'Anyone can view' },
+    PUBLIC: { label: 'Public (Everyone)', color: '#22c55e', description: 'All users can view' },
     STUDENT: { label: 'Student', color: '#3b82f6', description: 'Students + Teachers + HOD' },
-    STAFF: { label: 'Staff', color: '#f59e0b', description: 'Teachers + HOD only' },
+    STAFF: { label: 'Staff Only (General)', color: '#D4A017', description: 'Teachers + HOD + Admin only' },
     CONFIDENTIAL: { label: 'Confidential', color: '#ef4444', description: 'HOD + Admin only' },
     PRIVATE: { label: 'Private', color: '#6b7280', description: 'Only you + Admin' },
 };
