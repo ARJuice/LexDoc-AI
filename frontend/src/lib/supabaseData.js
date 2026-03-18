@@ -327,3 +327,90 @@ export const getDaysUntil = (dateStr) => {
     const diff = new Date(dateStr) - new Date();
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
 };
+
+// ---- Delete Functions ----
+
+/**
+ * Delete a single document by ID (enforced by DB RLS).
+ */
+export async function deleteDocument(docId) {
+    const { error } = await supabase.from('documents').delete().eq('id', docId);
+    if (error) { console.error('deleteDocument:', error); throw error; }
+
+    // Log deletion
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+        await supabase.from('audit_logs').insert({
+            user_id: (await supabase.from('users').select('id').eq('google_id', user.id).maybeSingle()).data?.id,
+            doc_id: docId,
+            action: 'DELETE',
+            details: `Document ${docId} deleted`,
+        });
+    }
+}
+
+/**
+ * Bulk delete documents (RLS-enforced per document).
+ */
+export async function bulkDeleteDocuments(docIds) {
+    const { error } = await supabase.from('documents').delete().in('id', docIds);
+    if (error) { console.error('bulkDeleteDocuments:', error); throw error; }
+}
+
+/**
+ * Check if the current profile can delete a given doc right now.
+ */
+export const canUserDeleteDocument = (doc, profile) => {
+    if (!profile) return false;
+    const roleLevel = profile.roles?.access_level || 0;
+
+    // Admin: always
+    if (roleLevel >= 10) return true;
+
+    // HOD: docs in their own department (or general docs)
+    if (roleLevel >= 7) {
+        if (doc.is_general) return true;
+        if (doc.dept_ids && doc.dept_ids.includes(profile.dept_id)) return true;
+    }
+
+    // Uploader: within 1 hour
+    if (doc.uploader_id === profile.id) {
+        const uploadedAt = new Date(doc.uploaded_at);
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        return uploadedAt >= oneHourAgo;
+    }
+
+    return false;
+};
+
+/**
+ * Check if the current profile has bulk-delete enabled (admin-granted permission).
+ */
+export const canUserBulkDelete = (profile) => {
+    if (!profile) return false;
+    const roleLevel = profile.roles?.access_level || 0;
+    // Admin always can
+    if (roleLevel >= 10) return true;
+    // Others only if admin has enabled it for them
+    return profile.bulk_delete_enabled === true;
+};
+
+// ---- Admin: User Management ----
+
+export async function fetchUsersAdmin() {
+    const { data, error } = await supabase
+        .from('users')
+        .select('*, roles(name, access_level), departments(name)')
+        .order('id');
+    if (error) { console.error('fetchUsersAdmin:', error); return []; }
+    return data;
+}
+
+export async function updateUserBulkDelete(userId, enabled) {
+    const { error } = await supabase
+        .from('users')
+        .update({ bulk_delete_enabled: enabled })
+        .eq('id', userId);
+    if (error) { console.error('updateUserBulkDelete:', error); throw error; }
+}
+

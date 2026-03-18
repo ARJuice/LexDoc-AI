@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FileText, Search, Grid3x3, List, ArrowDownUp, Lock, Tag, ChevronDown } from 'lucide-react';
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
+import CustomSelect from '../components/ui/CustomSelect';
 import {
     fetchDocuments, fetchDepartments, fetchTags, fetchSummaries,
     getTagColor, sortTagsByPriority, formatDate, formatFileSize,
@@ -118,10 +119,15 @@ export default function Documents() {
                         <Search size={16} />
                         <input type="text" placeholder="Search documents..." value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
-                    <select className="docs-filter" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
-                        <option value="all">All Departments</option>
-                        {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                    </select>
+                    <CustomSelect
+                        className="docs-filter-select"
+                        value={filterDept}
+                        onChange={setFilterDept}
+                        options={[
+                            { value: 'all', label: 'All Departments' },
+                            ...departments.map(d => ({ value: d.id, label: d.name }))
+                        ]}
+                    />
 
                     {/* Combined tag search bar: priority/label dropdown + custom tag text */}
                     <div className={`tag-search-bar${tagDropdownOpen ? ' open' : ''}`}>
@@ -144,8 +150,7 @@ export default function Documents() {
                             onChange={(e) => setTagSearch(e.target.value)}
                         />
                         {/* Dropdown panel */}
-                        {tagDropdownOpen && (
-                            <div className="tag-dropdown">
+                        <div className={`tag-dropdown${tagDropdownOpen ? ' visible' : ''}`}>
                                 <button
                                     className={`tag-dropdown-item${filterTagId === 'all' ? ' active' : ''}`}
                                     onClick={() => { setFilterTagId('all'); setTagDropdownOpen(false); }}
@@ -185,16 +190,20 @@ export default function Documents() {
                                         ))}
                                     </>
                                 )}
-                            </div>
-                        )}
+                        </div>
                     </div>
 
-                    <div className="docs-sort-wrap">
-                        <ArrowDownUp size={16} />
-                        <select className="docs-filter" value={sortByDate} onChange={(e) => setSortByDate(e.target.value)}>
-                            <option value="newest">Newest Uploads</option>
-                            <option value="oldest">Oldest Uploads</option>
-                        </select>
+                    <div className="docs-sort-wrap" style={{ zIndex: 40 }}>
+                        <CustomSelect
+                            className="docs-filter-select"
+                            value={sortByDate}
+                            onChange={setSortByDate}
+                            icon={ArrowDownUp}
+                            options={[
+                                { value: 'newest', label: 'Newest Uploads' },
+                                { value: 'oldest', label: 'Oldest Uploads' }
+                            ]}
+                        />
                     </div>
                     <div className="view-toggle">
                         <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')} data-hoverable><Grid3x3 size={16} /></button>

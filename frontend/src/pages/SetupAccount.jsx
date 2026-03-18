@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
 import { supabase } from '../lib/supabase';
 import { fetchDepartments, fetchRoles } from '../lib/supabaseData';
+import CustomSelect from '../components/ui/CustomSelect';
 import './SetupAccount.css';
 
 export default function SetupAccount() {
@@ -147,16 +148,16 @@ export default function SetupAccount() {
 
                         <div className="form-group">
                             <label>Department *</label>
-                            <select
+                            <CustomSelect
+                                className="setup-select"
                                 value={form.deptId}
-                                onChange={(e) => setForm({ ...form, deptId: e.target.value })}
-                                required
-                            >
-                                <option value="">Select department</option>
-                                {departments.map(d => (
-                                    <option key={d.id} value={d.id}>{d.name}</option>
-                                ))}
-                            </select>
+                                onChange={(val) => setForm({ ...form, deptId: val })}
+                                placeholder="Select department"
+                                options={[
+                                    { value: '', label: 'Select department' },
+                                    ...departments.map(d => ({ value: d.id, label: d.name }))
+                                ]}
+                            />
                         </div>
 
                         {/* Role is auto-assigned as Student for self-registration */}

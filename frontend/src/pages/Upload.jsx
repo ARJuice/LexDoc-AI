@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { UploadCloud, FileText, CheckCircle2, X, Plus, Lock, Info } from 'lucide-react';
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
+import CustomSelect from '../components/ui/CustomSelect';
 import {
     fetchDepartments, fetchTags, uploadDocument,
     getAllowedAccessLevels, ACCESS_LEVEL_INFO, EXPIRY_OPTIONS, calculateExpiryDate
@@ -206,10 +207,15 @@ export default function Upload() {
                     {!isPrivate && formData.accessLevel !== 'PUBLIC' && (
                         <div className="form-group">
                             <label>Department</label>
-                            <select value={formData.dept} onChange={(e) => setFormData({ ...formData, dept: e.target.value })}>
-                                <option value="">Select department</option>
-                                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                            </select>
+                            <CustomSelect
+                                className="upload-select"
+                                value={formData.dept}
+                                onChange={(val) => setFormData({ ...formData, dept: val })}
+                                options={[
+                                    { value: '', label: 'Select department' },
+                                    ...departments.map(d => ({ value: d.id, label: d.name }))
+                                ]}
+                            />
                         </div>
                     )}
 
@@ -276,11 +282,12 @@ export default function Upload() {
                     {/* Document Expiry */}
                     <div className="form-group">
                         <label>Document Expiry</label>
-                        <select value={formData.expiryDays} onChange={(e) => setFormData({ ...formData, expiryDays: e.target.value })}>
-                            {EXPIRY_OPTIONS.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                        </select>
+                        <CustomSelect
+                            className="upload-select"
+                            value={formData.expiryDays}
+                            onChange={(val) => setFormData({ ...formData, expiryDays: val })}
+                            options={EXPIRY_OPTIONS.map(opt => ({ value: opt.value, label: opt.label }))}
+                        />
                         <span className="form-hint">
                             <Info size={12} /> Documents without an expiry date are permanent. Otherwise, they will be automatically removed after the chosen period.
                         </span>

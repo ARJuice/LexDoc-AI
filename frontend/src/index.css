@@ -482,6 +482,121 @@ textarea {
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08), inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
+/* Custom Glass Select Component */
+.custom-select-container {
+    position: relative;
+    display: inline-flex;
+    min-width: 160px;
+    z-index: 10;
+}
+.custom-select-container.open {
+    z-index: 1500;
+}
+
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
+    color: var(--text-primary);
+    font-size: var(--fs-sm);
+    text-align: left;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.custom-select-container.open .custom-select-trigger {
+    border-color: rgba(255, 255, 255, 0.75);
+    background: var(--glass-surface-hover);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.3), inset 0 2px 4px rgba(0,0,0,0.06);
+}
+.dark .custom-select-container.open .custom-select-trigger {
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.07), inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.custom-select-icon {
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+.custom-select-label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.custom-select-chevron {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+}
+.custom-select-chevron.rotated {
+    transform: rotate(180deg);
+}
+
+.custom-select-dropdown {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    left: 0;
+    min-width: 100%;
+    background: var(--glass-bg);
+    background-color: var(--color-surface); /* Fix extreme translucency */
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--glass-shadow), var(--shadow-lg);
+    overflow: hidden;
+    padding: var(--space-2) 0;
+    display: flex;
+    flex-direction: column;
+    
+    /* Animation properties */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-8px) scale(0.98);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top center;
+}
+
+.custom-select-dropdown.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.custom-select-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: var(--space-2) var(--space-4);
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: var(--fs-sm);
+    text-align: left;
+    transition: background 0.15s ease;
+    cursor: pointer;
+}
+.custom-select-item:hover {
+    background: var(--glass-surface-hover);
+}
+.custom-select-item.active {
+    font-weight: 600;
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+
 /* Base Panel class for global use */
 .liquid-glass-panel {
     background: var(--glass-bg);
