@@ -114,12 +114,21 @@
   --text-muted: #737373;
   --text-inverse: #111111;
 
+<<<<<<< HEAD
   --glass-bg: rgba(20, 20, 20, 0.5);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-blur: blur(48px) saturate(120%);
   --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 1px 0 0 rgba(255, 255, 255, 0.03);
   --glass-highlight: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 40%);
   --glass-surface-hover: rgba(35, 35, 35, 0.5);
+=======
+  --glass-bg: rgba(15, 23, 42, 0.35);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(48px) saturate(150%);
+  --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 1px 0 0 rgba(255, 255, 255, 0.05);
+  --glass-highlight: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 40%);
+  --glass-surface-hover: rgba(30, 41, 59, 0.45);
+>>>>>>> ca8d6398eb0418a766663221eaf1e747783cc0ce
 
   --color-surface: #171717;
   --color-surface-hover: #262626;

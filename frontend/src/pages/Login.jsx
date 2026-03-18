@@ -19,10 +19,18 @@ export default function Login() {
 
     return (
         <div ref={pageRef} className="login-page">
+<<<<<<< HEAD
             {/* Background elements handled by global CSS orbs */}
 
             <div className="login-container">
                 <div className="login-card liquid-glass-card">
+=======
+            <div className="bg-ambient-orb orb-1" style={{ top: '-10%', left: '-10%' }} />
+            <div className="bg-ambient-orb orb-2" style={{ bottom: '-10%', right: '-10%' }} />
+
+            <div className="login-container">
+                <div className="login-card glass-card">
+>>>>>>> ca8d6398eb0418a766663221eaf1e747783cc0ce
                     <div className="login-header">
                         <div className="login-logo">
                             <Sparkles size={28} />
@@ -38,7 +46,11 @@ export default function Login() {
                     <div className="login-body">
                         {/* Google OAuth Only */}
                         <button
+<<<<<<< HEAD
                             className="google-btn liquid-glass-btn"
+=======
+                            className="google-btn btn btn-ghost"
+>>>>>>> ca8d6398eb0418a766663221eaf1e747783cc0ce
                             onClick={signInWithGoogle}
                             data-hoverable
                         >
