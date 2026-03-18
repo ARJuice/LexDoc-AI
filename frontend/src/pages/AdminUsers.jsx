@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Users, UserPlus, Edit2, ShieldOff } from 'lucide-react';
+import { Users, UserPlus, Edit2, ShieldOff, ChevronDown, ChevronUp, Check, X, ClipboardList, Eye, UploadCloud, FileText } from 'lucide-react';
 import gsap from 'gsap';
-import { fetchUsers, fetchRoles, fetchDepartments } from '../lib/supabaseData';
+import { fetchUsersAdmin, fetchRoles, fetchDepartments, updateUserBulkDelete, fetchAuditLogs, fetchDocuments, formatDateTime } from '../lib/supabaseData';
 import './Admin.css';
 
 export default function AdminUsers() {
@@ -10,12 +10,19 @@ export default function AdminUsers() {
     const [users, setUsers] = useState([]);
     const [roles, setRoles] = useState([]);
     const [departments, setDepartments] = useState([]);
+    const [auditLogs, setAuditLogs] = useState([]);
+    const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const [expandedUserId, setExpandedUserId] = useState(null);
 
     useEffect(() => {
         async function load() {
-            const [u, r, d] = await Promise.all([fetchUsers(), fetchRoles(), fetchDepartments()]);
-            setUsers(u); setRoles(r); setDepartments(d);
+            // Re-use fetchUsersAdmin from prior updates
+            const [u, r, d, l, docs] = await Promise.all([
+                fetchUsersAdmin(), fetchRoles(), fetchDepartments(), fetchAuditLogs(), fetchDocuments()
+            ]);
+            setUsers(u); setRoles(r); setDepartments(d); setAuditLogs(l); setDocuments(docs);
             setLoading(false);
         }
         load();
@@ -26,11 +33,26 @@ export default function AdminUsers() {
         const el = pageRef.current;
         if (!el) return;
         gsap.fromTo(el, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
-        gsap.fromTo(el.querySelectorAll('tbody tr'),
+        gsap.fromTo(el.querySelectorAll('tbody .main-row'),
             { opacity: 0, x: -16 },
             { opacity: 1, x: 0, duration: 0.4, stagger: 0.05, ease: 'power2.out', delay: 0.1 }
         );
     }, [loading]);
+
+    const handleToggleBulkDelete = async (user, e) => {
+        e.stopPropagation();
+        const newVal = !user.bulk_delete_enabled;
+        try {
+            await updateUserBulkDelete(user.id, newVal);
+            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, bulk_delete_enabled: newVal } : u));
+        } catch (err) {
+            alert('Failed to update permission');
+        }
+    };
+
+    const toggleExpand = (userId) => {
+        setExpandedUserId(prev => prev === userId ? null : userId);
+    };
 
     if (loading) {
         return <div className="page-container admin-page"><p style={{ color: 'var(--color-text-muted)' }}>Loading users...</p></div>;
@@ -55,6 +77,7 @@ export default function AdminUsers() {
                             <th>User</th>
                             <th>Department</th>
                             <th>Role</th>
+                            <th>Bulk Delete</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -63,35 +86,111 @@ export default function AdminUsers() {
                         {users.map(u => {
                             const dept = departments.find(d => d.id === u.dept_id);
                             const role = roles.find(r => r.id === u.role_id);
+                            const isExpanded = expandedUserId === u.id;
+                            
+                            // Get logs for this user, newest first
+                            const userLogs = auditLogs.filter(l => l.user_id === u.id).slice(0, 10);
+
                             return (
-                                <tr key={u.id}>
-                                    <td>
-                                        <div className="user-cell">
-                                            <div className="user-avatar">{u.username?.charAt(0)?.toUpperCase() || '?'}</div>
-                                            <div>
-                                                <div className="user-name">{u.username ? u.username.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') : '—'}</div>
-                                                <div className="user-email">{u.email || '—'}</div>
+                                <optgroup key={u.id} style={{ display: 'contents' }}>
+                                    <tr 
+                                        className={`main-row ${isExpanded ? 'expanded-row-active' : ''}`}
+                                        onClick={() => toggleExpand(u.id)}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        <td>
+                                            <div className="user-cell">
+                                                <div className="user-avatar">{u.username?.charAt(0)?.toUpperCase() || '?'}</div>
+                                                <div>
+                                                    <div className="user-name">{u.username ? u.username.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') : '—'}</div>
+                                                    <div className="user-email">{u.email || '—'}</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>{dept?.name || '—'}</td>
-                                    <td>
-                                        <span className="badge" style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)' }}>
-                                            {role?.name || '—'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span className={`badge ${u.is_verified ? 'badge-primary' : 'badge-accent'}`}>
-                                            {u.is_verified ? 'Active' : 'Pending'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="action-buttons">
-                                            <button className="btn-icon" title="Edit Role" data-hoverable><Edit2 size={16} /></button>
-                                            <button className="btn-icon danger" title="Deactivate" data-hoverable><ShieldOff size={16} /></button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                        <td>{dept?.name || '—'}</td>
+                                        <td>
+                                            <span className="badge" style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)' }}>
+                                                {role?.name || '—'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button 
+                                                className={`glass-toggle ${u.bulk_delete_enabled ? 'on' : 'off'}`}
+                                                onClick={(e) => handleToggleBulkDelete(u, e)}
+                                                title={u.bulk_delete_enabled ? 'Revoke bulk delete' : 'Grant bulk delete'}
+                                                data-hoverable
+                                            >
+                                                {u.bulk_delete_enabled ? <Check size={14} /> : <X size={14} />}
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <span className={`badge ${u.is_verified ? 'badge-primary' : 'badge-accent'}`}>
+                                                {u.is_verified ? 'Active' : 'Pending'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="action-buttons">
+                                                <button className="btn-icon" title="Edit Role" onClick={e => e.stopPropagation()} data-hoverable><Edit2 size={16} /></button>
+                                                <button className="btn-icon danger" title="Deactivate" onClick={e => e.stopPropagation()} data-hoverable><ShieldOff size={16} /></button>
+                                                <button className="btn-icon" title={isExpanded ? 'Collapse' : 'Expand Activity'} data-hoverable>
+                                                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    {/* Expandable sub-row with audit logs */}
+                                    {isExpanded && (
+                                        <tr className="expanded-subrow">
+                                            <td colSpan="6">
+                                                <div className="subrow-content">
+                                                    <h4 style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-3)', color: 'var(--color-primary)', fontSize: 'var(--fs-sm)' }}>
+                                                        <ClipboardList size={16} /> Recent Activity
+                                                    </h4>
+                                                    
+                                                    {userLogs.length === 0 ? (
+                                                        <p style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>No recent activity found.</p>
+                                                    ) : (
+                                                        <div className="mini-logs-list">
+                                                            {userLogs.map(log => {
+                                                                const doc = documents.find(d => d.id === log.doc_id);
+                                                                const isUpload = log.action === 'UPLOAD';
+                                                                const isLogin = log.action === 'LOGIN';
+                                                                const isDelete = log.action === 'DELETE';
+                                                                
+                                                                let icon = <Eye size={14} />;
+                                                                let color = 'var(--text-primary)';
+                                                                
+                                                                if (isUpload) { icon = <UploadCloud size={14} />; color = 'var(--color-primary)'; }
+                                                                if (isDelete) { icon = <Trash2 size={14} />; color = 'var(--color-danger)'; }
+                                                                if (isLogin) { icon = <ShieldOff size={14} />; color = 'var(--color-accent)'; }
+
+                                                                return (
+                                                                    <div key={log.id} className="mini-log-item">
+                                                                        <span style={{ color, flexShrink: 0 }}>{icon}</span>
+                                                                        <div className="mini-log-desc">
+                                                                            {isUpload && 'Uploaded document '}
+                                                                            {isDelete && 'Deleted document '}
+                                                                            {isLogin && 'System login '}
+                                                                            {(!isUpload && !isDelete && !isLogin) && 'Viewed document '}
+                                                                            
+                                                                            {(doc || log.doc_id) && (
+                                                                                <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
+                                                                                    {doc?.title || `ID: ${log.doc_id}`}
+                                                                                </strong>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="mini-log-time">{formatDateTime(log.timestamp)}</div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </optgroup>
                             );
                         })}
                     </tbody>

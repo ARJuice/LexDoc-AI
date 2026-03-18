@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Search, Grid3x3, List, ArrowDownUp, Lock, Tag, ChevronDown, Trash2, CheckSquare, Square } from 'lucide-react';
+import { FileText, Search, Grid3x3, List, ArrowDownUp, Lock, Tag, ChevronDown, Trash2 } from 'lucide-react';
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
 import CustomSelect from '../components/ui/CustomSelect';
@@ -8,9 +8,7 @@ import {
     fetchDocuments, fetchDepartments, fetchTags, fetchSummaries,
     getTagColor, sortTagsByPriority, formatDate, formatFileSize,
     ACCESS_LEVEL_INFO,
-    deleteDocument, bulkDeleteDocuments,
-    canUserDeleteDocument, canUserBulkDelete,
-    filterDocumentsByAccess
+    deleteDocument, canUserDeleteDocument
 } from '../lib/supabaseData';
 import './Documents.css';
 
@@ -36,13 +34,8 @@ export default function MyUploads() {
     const [loading, setLoading] = useState(true);
 
     // Delete state
-    const [bulkMode, setBulkMode] = useState(false);
-    const [selectedIds, setSelectedIds] = useState(new Set());
     const [deleting, setDeleting] = useState(false);
     const [confirmDeleteId, setConfirmDeleteId] = useState(null); // doc id for single-delete confirm
-
-    const roleLevel = profile?.roles?.access_level || 0;
-    const isBulkAllowed = canUserBulkDelete(profile);
 
     const load = useCallback(async () => {
         const [docs, depts, t, sums] = await Promise.all([
@@ -54,10 +47,8 @@ export default function MyUploads() {
 
     useEffect(() => { load(); }, [load]);
 
-    // HOD/Admin see all accessible docs; others see only their own
-    const baseDocs = roleLevel >= 7
-        ? filterDocumentsByAccess(documents, profile)
-        : (profile ? documents.filter(doc => doc.uploader_id === profile.id) : []);
+    // Only strict personal uploads
+    const myDocs = profile ? documents.filter(doc => doc.uploader_id === profile.id) : [];
 
     const getDocTags = (doc) => (doc.tag_ids || []).map(id => tags.find(t => t.id === id)).filter(Boolean);
     const getDocDepts = (doc) => (doc.dept_ids || []).map(id => departments.find(d => d.id === id)).filter(Boolean);
@@ -69,7 +60,7 @@ export default function MyUploads() {
         ? 'All Tags'
         : (tags.find(t => t.id === Number(filterTagId))?.name ?? 'All Tags');
 
-    const filteredDocs = baseDocs
+    const filteredDocs = myDocs
         .filter(doc => {
             const matchesSearch = doc.title.toLowerCase().includes(search.toLowerCase());
             const matchesDept = filterDept === 'all' || (doc.dept_ids || []).includes(Number(filterDept)) || doc.is_general;
@@ -115,36 +106,6 @@ export default function MyUploads() {
         setDeleting(false);
     };
 
-    const handleBulkDelete = async () => {
-        if (selectedIds.size === 0) return;
-        setDeleting(true);
-        try {
-            await bulkDeleteDocuments([...selectedIds]);
-            setDocuments(prev => prev.filter(d => !selectedIds.has(d.id)));
-            setSelectedIds(new Set());
-            setBulkMode(false);
-        } catch (e) {
-            alert('Bulk delete failed: ' + (e.message || 'Unknown error'));
-        }
-        setDeleting(false);
-    };
-
-    const toggleSelect = (id) => {
-        setSelectedIds(prev => {
-            const next = new Set(prev);
-            next.has(id) ? next.delete(id) : next.add(id);
-            return next;
-        });
-    };
-
-    const toggleSelectAll = () => {
-        if (selectedIds.size === filteredDocs.length) {
-            setSelectedIds(new Set());
-        } else {
-            setSelectedIds(new Set(filteredDocs.map(d => d.id)));
-        }
-    };
-
     if (loading) {
         return <div className="page-container"><p style={{ color: 'var(--color-text-muted)' }}>Loading documents...</p></div>;
     }
@@ -152,62 +113,15 @@ export default function MyUploads() {
     return (
         <div ref={pageRef} className="page-container documents-page">
             <div className="docs-header">
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-                    <div>
-                        <h2 className="page-title">{roleLevel >= 7 ? 'Document Management' : 'My Uploads'}</h2>
-                        <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-sm)', marginTop: 'var(--space-1)' }}>
-                            {baseDocs.length} document{baseDocs.length !== 1 ? 's' : ''}
-                            {roleLevel >= 7 ? ' accessible to you' : ' uploaded by you'}
-                        </p>
-                    </div>
-                    {/* Bulk mode toggle */}
-                    {isBulkAllowed && (
-                        <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
-                            {bulkMode && selectedIds.size > 0 && (
-                                <button
-                                    className="btn btn-danger"
-                                    onClick={handleBulkDelete}
-                                    disabled={deleting}
-                                    data-hoverable
-                                    style={{ fontSize: 'var(--fs-sm)', padding: 'var(--space-2) var(--space-4)' }}
-                                >
-                                    <Trash2 size={14} />
-                                    Delete {selectedIds.size} selected
-                                </button>
-                            )}
-                            <button
-                                className={`btn ${bulkMode ? 'btn-secondary' : 'btn-ghost'}`}
-                                onClick={() => { setBulkMode(v => !v); setSelectedIds(new Set()); }}
-                                data-hoverable
-                                style={{ fontSize: 'var(--fs-sm)', padding: 'var(--space-2) var(--space-4)' }}
-                            >
-                                <CheckSquare size={14} />
-                                {bulkMode ? 'Cancel' : 'Select'}
-                            </button>
-                        </div>
-                    )}
+                <div>
+                    <h2 className="page-title">My Uploads</h2>
+                    <p className="page-subtitle">Documents uploaded by you</p>
                 </div>
 
-                {/* Bulk mode: select all bar */}
-                {bulkMode && (
-                    <div className="bulk-select-bar">
-                        <button className="bulk-select-all" onClick={toggleSelectAll} data-hoverable>
-                            {selectedIds.size === filteredDocs.length
-                                ? <CheckSquare size={14} style={{ color: 'var(--color-primary)' }} />
-                                : <Square size={14} />
-                            }
-                            {selectedIds.size === filteredDocs.length ? 'Deselect all' : 'Select all'}
-                        </button>
-                        <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
-                            {selectedIds.size} of {filteredDocs.length} selected
-                        </span>
-                    </div>
-                )}
-
-                <div className="docs-toolbar">
+                <div className="docs-toolbar" style={{ marginTop: 'var(--space-4)' }}>
                     <div className="docs-search">
                         <Search size={16} />
-                        <input type="text" placeholder="Search documents..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                        <input type="text" placeholder="Search my uploads..." value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
                     <CustomSelect
                         className="docs-filter-select"
@@ -261,33 +175,28 @@ export default function MyUploads() {
                     const summary = getSummary(doc.id);
                     const levelInfo = ACCESS_LEVEL_INFO[doc.access_level] || ACCESS_LEVEL_INFO.PUBLIC;
                     const isRestricted = doc.access_level === 'PRIVATE' || doc.access_level === 'CONFIDENTIAL';
-                    const canDelete = canUserDeleteDocument(doc, profile);
-                    const isSelected = selectedIds.has(doc.id);
+                    
+                    // In MyUploads, any uploader can delete within 1 hour
+                    const canDelete = canUserDeleteDocument(doc, profile); 
 
                     return (
                         <div
                             key={doc.id}
-                            className={`doc-card card ${bulkMode && isSelected ? 'selected' : ''}`}
-                            onClick={() => bulkMode ? toggleSelect(doc.id) : navigate(`/documents/${doc.id}`)}
+                            className="doc-card card"
+                            onClick={() => navigate(`/documents/${doc.id}`)}
                             data-hoverable
-                            style={bulkMode ? { cursor: 'pointer', outline: isSelected ? '2px solid var(--color-primary)' : 'none' } : {}}
                         >
                             <div className="doc-card-header">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                                    {bulkMode && (
-                                        <span style={{ color: isSelected ? 'var(--color-primary)' : 'var(--text-muted)', flexShrink: 0 }}>
-                                            {isSelected ? <CheckSquare size={16} /> : <Square size={16} />}
-                                        </span>
-                                    )}
                                     <FileText size={20} className="doc-card-icon" />
                                 </div>
                                 <div className="doc-card-header-right">
                                     {isRestricted && <Lock size={14} style={{ color: levelInfo.color }} />}
                                     <span className="doc-access-badge" style={{ color: levelInfo.color, borderColor: levelInfo.color }}>{levelInfo.label}</span>
                                     <span className="doc-card-size">{formatFileSize(doc.file_size)}</span>
-                                    <span className="doc-card-date">{formatDate(doc.uploaded_at)}</span>
-                                    {/* Per-doc delete button */}
-                                    {!bulkMode && canDelete && (
+                                    
+                                    {/* Per-doc delete button (within 1 hr window) */}
+                                    {canDelete && (
                                         <button
                                             className="doc-delete-btn"
                                             title="Delete document"
@@ -319,11 +228,6 @@ export default function MyUploads() {
                             </div>
                             <div className="doc-card-footer">
                                 <span>{formatDate(doc.uploaded_at)}</span>
-                                {doc.uploader_id !== profile?.id && roleLevel >= 7 && (
-                                    <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                                        Dept doc
-                                    </span>
-                                )}
                             </div>
                         </div>
                     );

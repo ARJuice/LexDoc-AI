@@ -414,3 +414,16 @@ export async function updateUserBulkDelete(userId, enabled) {
     if (error) { console.error('updateUserBulkDelete:', error); throw error; }
 }
 
+export async function logUserAuth(userId, details) {
+    try {
+        await supabase.from('audit_logs').insert({
+            user_id: userId,
+            action: 'LOGIN',
+            details
+        });
+    } catch (err) {
+        console.error('logUserAuth error:', err);
+    }
+}
+
+

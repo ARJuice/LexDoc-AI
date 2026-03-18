@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { logUserAuth } from '../lib/supabaseData';
 
 const AuthContext = createContext(null);
 
@@ -64,7 +65,12 @@ export default function AuthProvider({ children }) {
                     return;
                 }
                 setAuthError(null);
-                fetchProfile(s.user.email).then(p => setProfile(p));
+                fetchProfile(s.user.email).then(p => {
+                    setProfile(p);
+                    if (_event === 'SIGNED_IN' && p) {
+                        logUserAuth(p.id, 'Logged in via Google/Email');
+                    }
+                });
             } else {
                 setProfile(null);
             }
