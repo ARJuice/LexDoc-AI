@@ -41,8 +41,8 @@ export default function Upload() {
         fetchTags().then(setTags);
     }, []);
 
-    const PRIORITY_TAGS = tags.filter(t => t.type === 'PRIORITY');
-    const RECENT_TAGS = tags.filter(t => t.type === 'LABEL').slice(0, 5);
+    const PRIORITY_TAGS = tags.filter(t => t.type && t.type.toUpperCase() === 'PRIORITY');
+    const RECENT_TAGS = tags.filter(t => t.type && t.type.toUpperCase() === 'LABEL').slice(0, 5);
     const PRIORITY_TAG_IDS = PRIORITY_TAGS.map(tag => tag.id);
     const selectedPriorityId = formData.tags.find(tagId => PRIORITY_TAG_IDS.includes(tagId));
 
@@ -220,7 +220,7 @@ export default function Upload() {
                                 <div className="tags-column">
                                     <span className="tags-column-label">Priority</span>
                                     <div className="tags-column-list">
-                                        {PRIORITY_TAGS.map(t => (
+                                        {PRIORITY_TAGS.length > 0 ? PRIORITY_TAGS.map(t => (
                                             <button
                                                 key={t.id}
                                                 className={`form-tag ${selectedPriorityId === t.id ? 'selected' : ''}`}
@@ -231,7 +231,7 @@ export default function Upload() {
                                             >
                                                 {t.name}
                                             </button>
-                                        ))}
+                                        )) : <span style={{fontSize: 'var(--fs-xs)', color: 'var(--text-muted)'}}>No priority tags available.</span>}
                                     </div>
                                 </div>
                                 <div className="tags-column">

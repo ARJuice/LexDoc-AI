@@ -156,10 +156,24 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative;
+}
+
+.notifications-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--glass-highlight);
+    pointer-events: none;
+    opacity: 0.5;
+    z-index: 0;
 }
 
 .notifications-panel .section-title {
     flex-shrink: 0;
+    position: relative;
+    z-index: 1;
 }
 
 .events-list {
