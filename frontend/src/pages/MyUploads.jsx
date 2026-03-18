@@ -119,14 +119,22 @@ export default function MyUploads() {
 
             <div className={`docs-grid ${viewMode}`}>
                 {filteredDocs.map(doc => {
-                    const docTags = sortTagsByPriority(getDocumentTags(doc));
-                    const docDepts = getDocumentDepartments(doc);
-                    const summary = getSummaryByDocId(doc.id);
+                    const docTags = sortTagsByPriority(getDocTags(doc));
+                    const docDepts = getDocDepts(doc);
+                    const summary = getSummary(doc.id);
+                    const levelInfo = ACCESS_LEVEL_INFO[doc.access_level] || ACCESS_LEVEL_INFO.PUBLIC;
+                    const isRestricted = doc.access_level === 'PRIVATE' || doc.access_level === 'CONFIDENTIAL';
                     return (
                         <div key={doc.id} className="doc-card card" onClick={() => navigate(`/documents/${doc.id}`)} data-hoverable>
                             <div className="doc-card-header">
                                 <FileText size={20} className="doc-card-icon" />
-                                <span className="doc-card-size">{formatFileSize(doc.file_size)}</span>
+                                <div className="doc-card-header-right">
+                                    {isRestricted && <Lock size={14} style={{ color: levelInfo.color }} />}
+                                    <span className="doc-access-badge" style={{ color: levelInfo.color, borderColor: levelInfo.color }}>
+                                        {levelInfo.label}
+                                    </span>
+                                    <span className="doc-card-size">{formatFileSize(doc.file_size)}</span>
+                                </div>
                             </div>
                             <h4 className="doc-card-title">{doc.title}</h4>
                             {summary && <p className="doc-card-summary">{summary.content.slice(0, 120)}...</p>}
