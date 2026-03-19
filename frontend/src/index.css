@@ -38,8 +38,8 @@
   --color-text-inverse: #FFFFFF;
 
   /* Liquid Glassmorphism System - Apple VisionOS Inspired */
-  --glass-bg: rgba(255, 255, 255, 0.25);
-  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.3);
   --glass-blur: blur(48px) saturate(150%);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 1px 0 0 rgba(255, 255, 255, 0.6);
   --glass-highlight: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0) 100%);
@@ -114,8 +114,8 @@
   --text-muted: #737373;
   --text-inverse: #111111;
 
-  --glass-bg: rgba(20, 20, 20, 0.5);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(20, 20, 20, 0.15);
+  --glass-border: rgba(255, 255, 255, 0.05);
   --glass-blur: blur(48px) saturate(120%);
   --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 1px 0 0 rgba(255, 255, 255, 0.03);
   --glass-highlight: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 40%);
@@ -325,9 +325,9 @@ textarea {
 }
 
 .card:hover, .glass-card:hover, .liquid-glass-card:hover {
-  transform: translateY(-4px) scale(1.01);
+  transform: translateY(-2px);
   background: var(--glass-surface-hover);
-  box-shadow: var(--glass-shadow), var(--shadow-lg);
+  box-shadow: var(--glass-shadow), var(--shadow-md);
 }
 
 .card:hover::before, .glass-card:hover::before, .liquid-glass-card:hover::before {
@@ -408,8 +408,8 @@ textarea {
 
 .btn-primary:hover, .liquid-glass-btn:hover {
   background: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.13), inset 0 1px 0 rgba(255, 255, 255, 1), inset 1px 0 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1), inset 1px 0 0 rgba(255, 255, 255, 0.6);
 }
 
 .dark .btn-primary:hover, .dark .liquid-glass-btn:hover {
@@ -418,7 +418,7 @@ textarea {
 }
 
 .btn-primary:active, .liquid-glass-btn:active {
-  transform: translateY(1px) scale(0.98);
+  transform: translateY(0px) scale(0.98);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
@@ -434,12 +434,12 @@ textarea {
 
 .btn-ghost:hover {
   background: var(--glass-surface-hover);
-  transform: translateY(-2px) scale(1.02);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .btn-ghost:active {
-  transform: translateY(1px) scale(0.98);
+  transform: translateY(0px) scale(0.98);
 }
 
 .btn-outline {
@@ -450,8 +450,37 @@ textarea {
 }
 
 .btn-outline:hover {
-  border-color: var(--text-primary);
   background: var(--color-surface-hover);
+  border-color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-danger {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-full);
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.btn-danger:hover {
+  background: var(--color-danger);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md), var(--glass-shadow);
+}
+
+.btn-danger:active {
+  transform: translateY(0px) scale(0.98);
 }
 
 /* Liquid Input */

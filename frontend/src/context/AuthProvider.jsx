@@ -101,10 +101,13 @@ export default function AuthProvider({ children }) {
     }, []);
 
     const signOut = useCallback(async () => {
+        if (profile?.id) {
+            await logUserAuth(profile.id, 'Logged out');
+        }
         await supabase.auth.signOut();
         setSession(null);
         setProfile(null);
-    }, []);
+    }, [profile]);
 
     const refreshProfile = useCallback(() => {
         if (session?.user?.email) {

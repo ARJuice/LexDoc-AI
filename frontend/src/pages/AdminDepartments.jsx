@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Building2, Plus, Edit2, Trash2 } from 'lucide-react';
 import gsap from 'gsap';
 import { fetchDepartments, fetchUsers } from '../lib/supabaseData';
+import { useAuth } from '../context/AuthProvider';
 import './Admin.css';
 
 export default function AdminDepartments() {
@@ -10,6 +11,7 @@ export default function AdminDepartments() {
     const [departments, setDepartments] = useState([]);
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { profile } = useAuth();
 
     useEffect(() => {
         async function load() {
@@ -33,6 +35,10 @@ export default function AdminDepartments() {
 
     if (loading) {
         return <div className="page-container admin-page"><p style={{ color: 'var(--color-text-muted)' }}>Loading departments...</p></div>;
+    }
+
+    if (profile && profile.roles?.access_level < 10) {
+        return <div className="page-container admin-page"><h2 style={{color: 'var(--color-danger)'}}>Access Denied</h2><p>You do not have permission to view this page.</p></div>;
     }
 
     return (

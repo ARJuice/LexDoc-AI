@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Search, Grid3x3, List, ArrowDownUp, Lock, Tag, ChevronDown, Trash2 } from 'lucide-react';
 import gsap from 'gsap';
@@ -242,7 +243,7 @@ export default function MyUploads() {
             )}
 
             {/* Single-delete confirmation modal */}
-            {confirmDeleteId && (
+            {confirmDeleteId && createPortal(
                 <div className="delete-confirm-overlay" onClick={() => setConfirmDeleteId(null)}>
                     <div className="delete-confirm-modal card" onClick={(e) => e.stopPropagation()}>
                         <Trash2 size={32} style={{ color: 'var(--color-danger)', marginBottom: 'var(--space-3)' }} />
@@ -262,7 +263,8 @@ export default function MyUploads() {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

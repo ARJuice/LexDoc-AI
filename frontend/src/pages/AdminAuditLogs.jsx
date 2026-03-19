@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ClipboardList, Search, FileText, User, Eye, UploadCloud } from 'lucide-react';
 import gsap from 'gsap';
 import { fetchAuditLogs, fetchUsers, fetchDocuments, formatDateTime } from '../lib/supabaseData';
+import { useAuth } from '../context/AuthProvider';
 import './Admin.css';
 
 export default function AdminAuditLogs() {
@@ -11,6 +12,7 @@ export default function AdminAuditLogs() {
     const [users, setUsers] = useState([]);
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { profile } = useAuth();
 
     useEffect(() => {
         async function load() {
@@ -36,6 +38,10 @@ export default function AdminAuditLogs() {
         return <div className="page-container admin-page"><p style={{ color: 'var(--color-text-muted)' }}>Loading audit logs...</p></div>;
     }
 
+    if (profile && profile.roles?.access_level < 10) {
+        return <div className="page-container admin-page"><h2 style={{color: 'var(--color-danger)'}}>Access Denied</h2><p>You do not have permission to view this page.</p></div>;
+    }
+
     return (
         <div ref={pageRef} className="page-container admin-page">
             <div className="admin-header">
@@ -59,17 +65,31 @@ export default function AdminAuditLogs() {
                     const user = users.find(u => u.id === log.user_id);
                     const doc = documents.find(d => d.id === log.doc_id);
                     const isUpload = log.action === 'UPLOAD';
+                    const isLogin = log.action === 'LOGIN';
+                    const isLogout = log.action === 'LOGOUT';
+                    const isDelete = log.action === 'DELETE';
+
+                    let icon = <Eye size={18} />;
+                    let iconColor = 'var(--text-secondary)';
+                    let actionText = 'viewed document';
+
+                    if (isUpload) { icon = <UploadCloud size={18} />; iconColor = 'var(--color-primary)'; actionText = 'uploaded document'; }
+                    if (isLogin) { icon = <User size={18} />; iconColor = 'var(--color-accent)'; actionText = 'logged in'; }
+                    if (isLogout) { icon = <User size={18} />; iconColor = 'var(--color-text-muted)'; actionText = 'logged out'; }
+                    if (isDelete) { icon = <FileText size={18} />; iconColor = 'var(--color-danger)'; actionText = 'deleted document'; }
 
                     return (
                         <div key={log.id} className="log-row">
-                            <div className="log-icon" style={{ color: isUpload ? 'var(--color-primary)' : 'var(--color-accent)' }}>
-                                {isUpload ? <UploadCloud size={18} /> : <Eye size={18} />}
+                            <div className="log-icon" style={{ color: iconColor }}>
+                                {icon}
                             </div>
                             <div className="log-content">
                                 <div className="log-desc">
                                     <span className="log-user"><User size={12} /> {user?.username || '—'}</span>
-                                    {' '}{isUpload ? 'uploaded' : 'viewed'}{' '}
-                                    <span className="log-doc"><FileText size={12} /> {doc?.title || log.details}</span>
+                                    {' '}{actionText}{' '}
+                                    {!(isLogin || isLogout) && (
+                                        <span className="log-doc"><FileText size={12} /> {doc?.title || log.details}</span>
+                                    )}
                                 </div>
                                 <div className="log-details">{log.details}</div>
                             </div>

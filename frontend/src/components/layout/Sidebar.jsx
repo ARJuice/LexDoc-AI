@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { useAuth } from '../../context/AuthProvider';
 import { toggleSidebar } from '../../store/store';
 import {
     LayoutDashboard, FileText, Upload, Sparkles, Users, Building2,
@@ -28,6 +29,7 @@ export default function Sidebar() {
     const dispatch = useDispatch();
     const sidebarRef = useRef(null);
     const location = useLocation();
+    const { profile } = useAuth();
 
     useEffect(() => {
         const el = sidebarRef.current;
@@ -53,6 +55,7 @@ export default function Sidebar() {
             {/* Navigation */}
             <nav className="sidebar-nav">
                 {navItems.map((item, i) => {
+                    if (item.admin && (!profile || profile.roles?.access_level < 10)) return null;
                     if (item.divider) return <div key={i} className="sidebar-divider" />;
                     const Icon = item.icon;
                     return (

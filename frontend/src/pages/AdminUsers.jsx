@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Users, UserPlus, Edit2, ShieldOff, ChevronDown, ChevronUp, Check, X, ClipboardList, Eye, UploadCloud, FileText } from 'lucide-react';
 import gsap from 'gsap';
-import { fetchUsersAdmin, fetchRoles, fetchDepartments, updateUserBulkDelete, fetchAuditLogs, fetchDocuments, formatDateTime } from '../lib/supabaseData';
+import { fetchUsersAdmin, fetchRoles, fetchDepartments, updateUserBulkDelete, fetchAuditLogs, fetchDocuments, formatDateTime, updateUserRole } from '../lib/supabaseData';
+import { useAuth } from '../context/AuthProvider';
 import './Admin.css';
 
 export default function AdminUsers() {
@@ -13,6 +14,7 @@ export default function AdminUsers() {
     const [auditLogs, setAuditLogs] = useState([]);
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { profile } = useAuth();
 
     const [expandedUserId, setExpandedUserId] = useState(null);
 
@@ -50,12 +52,25 @@ export default function AdminUsers() {
         }
     };
 
+    const handleRoleChange = async (user, newRoleId) => {
+        try {
+            await updateUserRole(user.id, newRoleId);
+            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role_id: newRoleId } : u));
+        } catch (err) {
+            alert('Failed to update role');
+        }
+    };
+
     const toggleExpand = (userId) => {
         setExpandedUserId(prev => prev === userId ? null : userId);
     };
 
     if (loading) {
         return <div className="page-container admin-page"><p style={{ color: 'var(--color-text-muted)' }}>Loading users...</p></div>;
+    }
+
+    if (profile && profile.roles?.access_level < 10) {
+        return <div className="page-container admin-page"><h2 style={{color: 'var(--color-danger)'}}>Access Denied</h2><p>You do not have permission to view this page.</p></div>;
     }
 
     return (
@@ -109,9 +124,17 @@ export default function AdminUsers() {
                                         </td>
                                         <td>{dept?.name || '—'}</td>
                                         <td>
-                                            <span className="badge" style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)' }}>
-                                                {role?.name || '—'}
-                                            </span>
+                                            <select
+                                                className="liquid-glass-input"
+                                                style={{ padding: '6px 12px', fontSize: 'var(--fs-xs)', width: 'auto', backgroundColor: 'var(--glass-bg)' }}
+                                                value={u.role_id}
+                                                onChange={(e) => handleRoleChange(u, Number(e.target.value))}
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                {roles.map(r => (
+                                                    <option key={r.id} value={r.id} style={{ color: 'var(--text-inverse)' }}>{r.name}</option>
+                                                ))}
+                                            </select>
                                         </td>
                                         <td>
                                             <button 
@@ -156,6 +179,7 @@ export default function AdminUsers() {
                                                                 const doc = documents.find(d => d.id === log.doc_id);
                                                                 const isUpload = log.action === 'UPLOAD';
                                                                 const isLogin = log.action === 'LOGIN';
+                                                                const isLogout = log.action === 'LOGOUT';
                                                                 const isDelete = log.action === 'DELETE';
                                                                 
                                                                 let icon = <Eye size={14} />;
@@ -164,6 +188,7 @@ export default function AdminUsers() {
                                                                 if (isUpload) { icon = <UploadCloud size={14} />; color = 'var(--color-primary)'; }
                                                                 if (isDelete) { icon = <Trash2 size={14} />; color = 'var(--color-danger)'; }
                                                                 if (isLogin) { icon = <ShieldOff size={14} />; color = 'var(--color-accent)'; }
+                                                                if (isLogout) { icon = <User size={14} />; color = 'var(--text-muted)'; }
 
                                                                 return (
                                                                     <div key={log.id} className="mini-log-item">
@@ -172,7 +197,8 @@ export default function AdminUsers() {
                                                                             {isUpload && 'Uploaded document '}
                                                                             {isDelete && 'Deleted document '}
                                                                             {isLogin && 'System login '}
-                                                                            {(!isUpload && !isDelete && !isLogin) && 'Viewed document '}
+                                                                            {isLogout && 'System logout '}
+                                                                            {(!isUpload && !isDelete && !isLogin && !isLogout) && 'Viewed document '}
                                                                             
                                                                             {(doc || log.doc_id) && (
                                                                                 <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>

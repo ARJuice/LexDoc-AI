@@ -15,7 +15,7 @@ export default function SetupAccount() {
 
     const [departments, setDepartments] = useState([]);
     const [roles, setRoles] = useState([]);
-    const [form, setForm] = useState({ username: '', password: '', confirmPassword: '', deptId: '', roleId: '' });
+    const [form, setForm] = useState({ username: '', deptId: '', roleId: '' });
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
@@ -37,16 +37,8 @@ export default function SetupAccount() {
         e.preventDefault();
         setError('');
 
-        if (!form.username.trim() || !form.password || !form.deptId) {
+        if (!form.username.trim() || !form.deptId) {
             setError('Please fill in all required fields.');
-            return;
-        }
-        if (form.password !== form.confirmPassword) {
-            setError('Passwords do not match.');
-            return;
-        }
-        if (form.password.length < 6) {
-            setError('Password must be at least 6 characters.');
             return;
         }
 
@@ -76,9 +68,6 @@ export default function SetupAccount() {
                 setSubmitting(false);
                 return;
             }
-
-            // Update the Supabase auth user password so they can login with email/password next time
-            await supabase.auth.updateUser({ password: form.password });
 
             // Refresh profile in context
             await refreshProfile();
@@ -120,28 +109,6 @@ export default function SetupAccount() {
                                 placeholder="e.g. john.doe"
                                 value={form.username}
                                 onChange={(e) => setForm({ ...form, username: e.target.value })}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Password *</label>
-                            <input
-                                type="password"
-                                placeholder="Min. 6 characters"
-                                value={form.password}
-                                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Confirm Password *</label>
-                            <input
-                                type="password"
-                                placeholder="Re-enter password"
-                                value={form.confirmPassword}
-                                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                                 required
                             />
                         </div>

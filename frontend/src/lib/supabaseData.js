@@ -203,7 +203,7 @@ export async function uploadDocument(file, { title, deptId, tagIds, customTags =
             }
 
             // Link tag to document
-            await supabase.from('document_tags').insert({ doc_id: doc.id, tag_id: tagId }).onConflict('doc_id,tag_id').ignore();
+            await supabase.from('document_tags').upsert({ doc_id: doc.id, tag_id: tagId }, { ignoreDuplicates: true });
         }
     }
 
@@ -412,6 +412,14 @@ export async function updateUserBulkDelete(userId, enabled) {
         .update({ bulk_delete_enabled: enabled })
         .eq('id', userId);
     if (error) { console.error('updateUserBulkDelete:', error); throw error; }
+}
+
+export async function updateUserRole(userId, roleId) {
+    const { error } = await supabase
+        .from('users')
+        .update({ role_id: roleId })
+        .eq('id', userId);
+    if (error) { console.error('updateUserRole:', error); throw error; }
 }
 
 export async function logUserAuth(userId, details) {
