@@ -1,17 +1,30 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Copy, RefreshCw, Download, ZoomIn, ZoomOut, FileText, Tag, Calendar, User } from 'lucide-react';
+import { ArrowLeft, Copy, RefreshCw, Download, ZoomIn, ZoomOut, FileText, Tag, Calendar, AlertCircle, Loader2 } from 'lucide-react';
 import gsap from 'gsap';
+import { supabase } from '../lib/supabase';
 import {
     fetchDocumentById, fetchSummaryByDocId, fetchTags, fetchDepartments, fetchEventsByDocId,
     getTagColor, sortTagsByPriority, formatDate, formatFileSize
 } from '../lib/supabaseData';
 import './DocumentDetail.css';
 
+// Lazy-load docx-preview only when needed
+let renderDocxAsync = null;
+
+async function loadDocxPreview() {
+    if (!renderDocxAsync) {
+        const mod = await import('docx-preview');
+        renderDocxAsync = mod.renderAsync;
+    }
+    return renderDocxAsync;
+}
+
 export default function DocumentDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const pageRef = useRef(null);
+    const docxContainerRef = useRef(null);
 
     const [doc, setDoc] = useState(null);
     const [summary, setSummary] = useState(null);
@@ -19,6 +32,26 @@ export default function DocumentDetail() {
     const [departments, setDepartments] = useState([]);
     const [docEvents, setDocEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Viewer state
+    const [fileUrl, setFileUrl] = useState(null);
+    const [fileBlob, setFileBlob] = useState(null);
+    const [viewerLoading, setViewerLoading] = useState(true);
+    const [viewerError, setViewerError] = useState(null);
+    const [zoom, setZoom] = useState(100);
+
+    // Determine file type from mime or extension
+    const getFileType = useCallback(() => {
+        if (!doc) return 'unknown';
+        const mime = doc.mime_type || '';
+        const path = doc.storage_path || '';
+
+        if (mime === 'application/pdf' || path.endsWith('.pdf')) return 'pdf';
+        if (mime.includes('wordprocessingml') || mime.includes('msword') || path.endsWith('.docx') || path.endsWith('.doc')) return 'docx';
+        if (mime.startsWith('text/') || path.endsWith('.txt')) return 'text';
+        if (mime.startsWith('image/')) return 'image';
+        return 'unknown';
+    }, [doc]);
 
     useEffect(() => {
         async function load() {
@@ -34,6 +67,80 @@ export default function DocumentDetail() {
         }
         load();
     }, [id]);
+
+    // Fetch signed URL + blob when doc is loaded
+    useEffect(() => {
+        if (!doc || !doc.storage_path) return;
+
+        async function fetchFile() {
+            setViewerLoading(true);
+            setViewerError(null);
+
+            try {
+                // Get a signed URL (valid 1 hour)
+                const { data: signedData, error: signedError } = await supabase.storage
+                    .from(doc.storage_bucket || 'docs')
+                    .createSignedUrl(doc.storage_path, 3600);
+
+                if (signedError) throw signedError;
+
+                setFileUrl(signedData.signedUrl);
+
+                // For DOCX and text, also fetch the blob
+                const fileType = (() => {
+                    const mime = doc.mime_type || '';
+                    const path = doc.storage_path || '';
+                    if (mime === 'application/pdf' || path.endsWith('.pdf')) return 'pdf';
+                    if (mime.includes('wordprocessingml') || mime.includes('msword') || path.endsWith('.docx') || path.endsWith('.doc')) return 'docx';
+                    if (mime.startsWith('text/') || path.endsWith('.txt')) return 'text';
+                    if (mime.startsWith('image/')) return 'image';
+                    return 'unknown';
+                })();
+
+                if (fileType === 'docx' || fileType === 'text') {
+                    const { data: downloadData, error: downloadError } = await supabase.storage
+                        .from(doc.storage_bucket || 'docs')
+                        .download(doc.storage_path);
+
+                    if (downloadError) throw downloadError;
+                    setFileBlob(downloadData);
+                }
+
+                setViewerLoading(false);
+            } catch (err) {
+                console.error('File fetch error:', err);
+                setViewerError(err.message || 'Failed to load document file.');
+                setViewerLoading(false);
+            }
+        }
+
+        fetchFile();
+    }, [doc]);
+
+    // Render DOCX when blob is ready
+    useEffect(() => {
+        if (!fileBlob || !docxContainerRef.current || getFileType() !== 'docx') return;
+
+        const container = docxContainerRef.current;
+        container.innerHTML = '';
+
+        loadDocxPreview().then(renderAsync => {
+            renderAsync(fileBlob, container, undefined, {
+                className: 'docx-viewer-content',
+                inWrapper: true,
+                ignoreWidth: false,
+                ignoreHeight: false,
+                ignoreFonts: false,
+                breakPages: true,
+                renderHeaders: true,
+                renderFooters: true,
+                renderFootnotes: true,
+            }).catch(err => {
+                console.error('DOCX render error:', err);
+                setViewerError('Failed to render DOCX file.');
+            });
+        });
+    }, [fileBlob, getFileType]);
 
     const docTags = doc ? sortTagsByPriority((doc.tag_ids || []).map(tid => tags.find(t => t.id === tid)).filter(Boolean)) : [];
     const docDepts = doc ? (doc.dept_ids || []).map(did => departments.find(d => d.id === did)).filter(Boolean) : [];
@@ -66,6 +173,102 @@ export default function DocumentDetail() {
         if (summary) navigator.clipboard.writeText(summary.content);
     };
 
+    const handleDownload = async () => {
+        if (!doc?.storage_path) return;
+        try {
+            const { data, error } = await supabase.storage
+                .from(doc.storage_bucket || 'docs')
+                .download(doc.storage_path);
+            if (error) throw error;
+
+            // Create a blob URL and trigger download
+            const url = URL.createObjectURL(data);
+            const a = document.createElement('a');
+            a.href = url;
+            // Extract original filename from storage_path (strip the timestamp prefix)
+            const originalName = doc.storage_path.replace(/^\d+_/, '') || doc.title || 'document';
+            a.download = originalName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Download error:', err);
+            alert('Download failed: ' + (err.message || 'Unknown error'));
+        }
+    };
+
+    const handleZoomIn = () => setZoom(prev => Math.min(prev + 25, 250));
+    const handleZoomOut = () => setZoom(prev => Math.max(prev - 25, 50));
+
+    const fileType = getFileType();
+
+    // Render the document viewer based on file type
+    const renderViewer = () => {
+        if (viewerLoading) {
+            return (
+                <div className="pdf-placeholder">
+                    <Loader2 size={48} className="viewer-spinner" />
+                    <p>Loading document...</p>
+                </div>
+            );
+        }
+
+        if (viewerError) {
+            return (
+                <div className="pdf-placeholder">
+                    <AlertCircle size={48} style={{ color: 'var(--color-danger)' }} />
+                    <p>Error Loading Document</p>
+                    <span>{viewerError}</span>
+                </div>
+            );
+        }
+
+        if (fileType === 'pdf' && fileUrl) {
+            return (
+                <div className="viewer-frame-wrapper" style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }}>
+                    <iframe
+                        src={fileUrl + '#toolbar=0&navpanes=0'}
+                        className="viewer-iframe"
+                        title={doc.title}
+                    />
+                </div>
+            );
+        }
+
+        if (fileType === 'docx' && fileBlob) {
+            return (
+                <div
+                    ref={docxContainerRef}
+                    className="docx-viewer-wrapper"
+                    style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }}
+                />
+            );
+        }
+
+        if (fileType === 'text' && fileBlob) {
+            return (
+                <TextViewer blob={fileBlob} zoom={zoom} />
+            );
+        }
+
+        if (fileType === 'image' && fileUrl) {
+            return (
+                <div className="image-viewer-wrapper" style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }}>
+                    <img src={fileUrl} alt={doc.title} className="viewer-image" />
+                </div>
+            );
+        }
+
+        return (
+            <div className="pdf-placeholder">
+                <FileText size={64} />
+                <p>Preview Unavailable</p>
+                <span>This file type ({doc.mime_type || 'unknown'}) cannot be previewed. Use the download button above.</span>
+            </div>
+        );
+    };
+
     return (
         <div ref={pageRef} className="page-container detail-page">
             <button className="btn btn-ghost detail-back" onClick={() => navigate('/documents')} data-hoverable>
@@ -73,20 +276,19 @@ export default function DocumentDetail() {
             </button>
 
             <div className="detail-split">
-                {/* Left: PDF Viewer Placeholder */}
+                {/* Left: Document Viewer */}
                 <div className="detail-pdf">
                     <div className="pdf-toolbar">
                         <span className="pdf-title">{doc.title}</span>
                         <div className="pdf-actions">
-                            <button className="btn btn-ghost" data-hoverable><ZoomOut size={16} /></button>
-                            <button className="btn btn-ghost" data-hoverable><ZoomIn size={16} /></button>
-                            <button className="btn btn-ghost" data-hoverable><Download size={16} /></button>
+                            <button className="btn btn-ghost" onClick={handleZoomOut} title="Zoom out" data-hoverable><ZoomOut size={16} /></button>
+                            <span className="zoom-label">{zoom}%</span>
+                            <button className="btn btn-ghost" onClick={handleZoomIn} title="Zoom in" data-hoverable><ZoomIn size={16} /></button>
+                            <button className="btn btn-ghost" onClick={handleDownload} title="Download" data-hoverable><Download size={16} /></button>
                         </div>
                     </div>
-                    <div className="pdf-placeholder">
-                        <FileText size={64} />
-                        <p>PDF Viewer</p>
-                        <span>Document preview will render here once Supabase storage is connected</span>
+                    <div className="viewer-container">
+                        {renderViewer()}
                     </div>
                 </div>
 
@@ -165,5 +367,23 @@ export default function DocumentDetail() {
                 </div>
             </div>
         </div>
+    );
+}
+
+// Simple text file viewer sub-component
+function TextViewer({ blob, zoom }) {
+    const [text, setText] = useState('Loading...');
+
+    useEffect(() => {
+        blob.text().then(t => setText(t)).catch(() => setText('Failed to read text file.'));
+    }, [blob]);
+
+    return (
+        <pre
+            className="text-viewer"
+            style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top left' }}
+        >
+            {text}
+        </pre>
     );
 }

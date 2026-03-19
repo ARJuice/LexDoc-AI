@@ -9,7 +9,7 @@
     min-height: calc(100vh - var(--topbar-height) - 120px);
 }
 
-/* PDF Panel */
+/* PDF / Viewer Panel */
 .detail-pdf {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -26,6 +26,7 @@
     padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--color-border);
     background: var(--color-surface-hover);
+    flex-shrink: 0;
 }
 
 .pdf-title {
@@ -41,8 +42,128 @@
 .pdf-actions {
     display: flex;
     gap: var(--space-1);
+    align-items: center;
 }
 
+.zoom-label {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-weight: 600;
+    min-width: 40px;
+    text-align: center;
+}
+
+/* Viewer Container — scrollable area for the document */
+.viewer-container {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 500px;
+    background: var(--bg-primary);
+    position: relative;
+}
+
+/* PDF iframe */
+.viewer-frame-wrapper {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    transition: transform 0.3s ease;
+}
+
+.viewer-iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 700px;
+    border: none;
+    background: white;
+}
+
+/* DOCX Viewer */
+.docx-viewer-wrapper {
+    width: 100%;
+    min-height: 500px;
+    padding: var(--space-4);
+    transition: transform 0.3s ease;
+    background: white;
+}
+
+/* Override docx-preview's generated styles to look polished */
+.docx-viewer-wrapper .docx-wrapper {
+    background: white !important;
+    padding: 0 !important;
+}
+
+.docx-viewer-wrapper .docx-wrapper > section.docx {
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.12) !important;
+    margin: var(--space-4) auto !important;
+    border-radius: 4px;
+    padding: 40px 60px !important;
+    max-width: 900px;
+}
+
+.dark .docx-viewer-wrapper {
+    background: #1a1a1a;
+}
+
+.dark .docx-viewer-wrapper .docx-wrapper {
+    background: #1a1a1a !important;
+}
+
+.dark .docx-viewer-wrapper .docx-wrapper > section.docx {
+    background: #1e1e1e !important;
+    color: #e0e0e0 !important;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Text Viewer */
+.text-viewer {
+    width: 100%;
+    padding: var(--space-6);
+    font-family: 'DM Sans', monospace;
+    font-size: var(--fs-sm);
+    color: var(--text-primary);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    margin: var(--space-4);
+    max-width: calc(100% - var(--space-8));
+    transition: transform 0.3s ease;
+}
+
+/* Image Viewer */
+.image-viewer-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+    transition: transform 0.3s ease;
+}
+
+.viewer-image {
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    object-fit: contain;
+}
+
+/* Loading spinner */
+.viewer-spinner {
+    animation: spin 1s linear infinite;
+    color: var(--color-primary);
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Placeholder (fallbacks / error / loading) */
 .pdf-placeholder {
     flex: 1;
     display: flex;
@@ -63,7 +184,8 @@
 .pdf-placeholder span {
     font-size: var(--fs-sm);
     text-align: center;
-    max-width: 300px;
+    max-width: 360px;
+    line-height: 1.5;
 }
 
 /* AI Panel */
@@ -181,4 +303,11 @@
     display: flex;
     align-items: center;
     gap: var(--space-1);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .detail-split {
+        grid-template-columns: 1fr;
+    }
 }

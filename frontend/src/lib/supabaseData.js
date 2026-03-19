@@ -334,15 +334,23 @@ export const getDaysUntil = (dateStr) => {
  * Delete a single document by ID (enforced by DB RLS).
  */
 export async function deleteDocument(docId) {
+    // Note: To respect RLS, we first need to get the storage path before deleting
+    const { data: docData } = await supabase.from('documents').select('storage_path, storage_bucket').eq('id', docId).maybeSingle();
+
     const { error } = await supabase.from('documents').delete().eq('id', docId);
-    if (error) { console.error('deleteDocument:', error); throw error; }
+    if (error) { console.error('deleteDocument DB error:', error); throw error; }
+
+    // After successful DB deletion, delete from Storage
+    if (docData && docData.storage_path) {
+        await supabase.storage.from(docData.storage_bucket || 'docs').remove([docData.storage_path]);
+    }
 
     // Log deletion
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
         await supabase.from('audit_logs').insert({
             user_id: (await supabase.from('users').select('id').eq('google_id', user.id).maybeSingle()).data?.id,
-            doc_id: docId,
+            doc_id: null,
             action: 'DELETE',
             details: `Document ${docId} deleted`,
         });
@@ -353,8 +361,26 @@ export async function deleteDocument(docId) {
  * Bulk delete documents (RLS-enforced per document).
  */
 export async function bulkDeleteDocuments(docIds) {
+    // Note: Fetch paths before deleting to respect RLS
+    const { data: docsData } = await supabase.from('documents').select('storage_path, storage_bucket').in('id', docIds);
+
     const { error } = await supabase.from('documents').delete().in('id', docIds);
-    if (error) { console.error('bulkDeleteDocuments:', error); throw error; }
+    if (error) { console.error('bulkDeleteDocuments DB error:', error); throw error; }
+
+    // After successful DB deletion, delete from Storage
+    if (docsData && docsData.length > 0) {
+        const filesByBucket = {};
+        docsData.forEach(d => {
+            if (!d.storage_path) return;
+            const b = d.storage_bucket || 'docs';
+            if (!filesByBucket[b]) filesByBucket[b] = [];
+            filesByBucket[b].push(d.storage_path);
+        });
+        
+        for (const [bucket, paths] of Object.entries(filesByBucket)) {
+            await supabase.storage.from(bucket).remove(paths);
+        }
+    }
 }
 
 /**
