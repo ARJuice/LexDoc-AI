@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles, Info } from 'lucide-react';
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
+import logoImg from '../assets/Logo - Document AI.png';
 import './Login.css';
 
 export default function Login() {
@@ -43,11 +44,10 @@ export default function Login() {
 
             <div className="login-container">
                 <div className="login-card liquid-glass-card">
-                    <div className="login-header">
-                        <div className="login-logo">
-                            <Sparkles size={28} />
+                    <div className="login-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div className="login-logo-container" style={{ marginBottom: 'var(--space-3)' }}>
+                            <img src={logoImg} alt="LexDoc AI Logo" style={{ height: '64px', width: 'auto', objectFit: 'contain' }} />
                         </div>
-                        <h1>LexDoc AI</h1>
                         <p>AI-Powered Document Intelligence</p>
                     </div>
 

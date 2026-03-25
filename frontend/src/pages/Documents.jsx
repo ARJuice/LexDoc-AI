@@ -298,7 +298,7 @@ export default function Documents() {
                         />
                     </div>
 
-                    <div className="view-toggle">
+                    <div className={`view-toggle mode-${viewMode}`}>
                         <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')} data-hoverable>
                             <Grid3x3 size={16} />
                         </button>

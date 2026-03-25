@@ -163,7 +163,7 @@ export default function MyUploads() {
                         <CustomSelect className="docs-filter-select" value={sortByDate} onChange={setSortByDate} icon={ArrowDownUp}
                             options={[{ value: 'newest', label: 'Newest Uploads' }, { value: 'oldest', label: 'Oldest Uploads' }]} />
                     </div>
-                    <div className="view-toggle">
+                    <div className={`view-toggle mode-${viewMode}`}>
                         <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')} data-hoverable><Grid3x3 size={16} /></button>
                         <button className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')} data-hoverable><List size={16} /></button>
                     </div>

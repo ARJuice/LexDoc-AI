@@ -9,6 +9,8 @@ import {
 import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import './Sidebar.css';
+import logoImg from '../../assets/Logo - Document AI.png';
+
 
 const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -46,10 +48,19 @@ export default function Sidebar() {
         <aside ref={sidebarRef} className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
             {/* Logo */}
             <div className="sidebar-logo">
-                <div className="sidebar-logo-icon">
-                    <Sparkles size={22} />
-                </div>
-                {!collapsed && <span className="sidebar-logo-text">LexDoc AI</span>}
+                <img 
+                    src={logoImg} 
+                    alt="LexDoc AI Logo" 
+                    className="sidebar-logo-icon" 
+                    style={{ 
+                        height: '32px', 
+                        width: '32px', 
+                        objectFit: 'contain',
+                        filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.1))',
+                        transition: 'all var(--transition-base)'
+                    }} 
+                />
+                <span className="sidebar-logo-text">LexDoc AI</span>
             </div>
 
             {/* Navigation */}
@@ -68,7 +79,7 @@ export default function Sidebar() {
                             data-hoverable
                         >
                             <Icon size={20} />
-                            {!collapsed && <span className="sidebar-label">{item.label}</span>}
+                            <span className="sidebar-label">{item.label}</span>
                         </NavLink>
                     );
                 })}
