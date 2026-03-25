@@ -5,6 +5,7 @@ import { FileText, Search, Grid3x3, List, ArrowDownUp, Lock, Tag, ChevronDown, T
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
 import CustomSelect from '../components/ui/CustomSelect';
+import ReAuthModal from '../components/auth/ReAuthModal';
 import {
     fetchDocuments, fetchDepartments, fetchTags, fetchSummaries,
     getTagColor, sortTagsByPriority, formatDate, formatFileSize,
@@ -242,30 +243,13 @@ export default function MyUploads() {
                 </div>
             )}
 
-            {/* Single-delete confirmation modal */}
-            {confirmDeleteId && createPortal(
-                <div className="delete-confirm-overlay" onClick={() => setConfirmDeleteId(null)}>
-                    <div className="delete-confirm-modal card" onClick={(e) => e.stopPropagation()}>
-                        <Trash2 size={32} style={{ color: 'var(--color-danger)', marginBottom: 'var(--space-3)' }} />
-                        <h3 style={{ marginBottom: 'var(--space-2)' }}>Delete Document?</h3>
-                        <p style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginBottom: 'var(--space-5)' }}>
-                            This action cannot be undone. The document and all associated data will be permanently removed.
-                        </p>
-                        <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
-                            <button className="btn btn-ghost" onClick={() => setConfirmDeleteId(null)} data-hoverable>Cancel</button>
-                            <button
-                                className="btn btn-danger"
-                                onClick={() => handleSingleDelete(confirmDeleteId)}
-                                disabled={deleting}
-                                data-hoverable
-                            >
-                                {deleting ? 'Deleting...' : 'Delete'}
-                            </button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
+            {/* Secure Re-Auth Modal for Deletion */}
+            <ReAuthModal 
+                isOpen={!!confirmDeleteId} 
+                onClose={() => setConfirmDeleteId(null)} 
+                onConfirm={() => handleSingleDelete(confirmDeleteId)} 
+                actionName="Delete Document Permanently" 
+            />
         </div>
     );
 }

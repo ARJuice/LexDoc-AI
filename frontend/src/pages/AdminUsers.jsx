@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Users, UserPlus, Edit2, ShieldOff, ChevronDown, ChevronUp, Check, X, ClipboardList, Eye, UploadCloud, FileText } from 'lucide-react';
+import { Users, UserPlus, Edit2, ShieldOff, ChevronDown, ChevronUp, Check, X, ClipboardList, Eye, UploadCloud, FileText, User } from 'lucide-react';
 import gsap from 'gsap';
 import { fetchUsersAdmin, fetchRoles, fetchDepartments, updateUserBulkDelete, fetchAuditLogs, fetchDocuments, formatDateTime, updateUserRole } from '../lib/supabaseData';
 import { useAuth } from '../context/AuthProvider';
+import ReAuthModal from '../components/auth/ReAuthModal';
 import './Admin.css';
 
 export default function AdminUsers() {
@@ -17,6 +18,7 @@ export default function AdminUsers() {
     const { profile } = useAuth();
 
     const [expandedUserId, setExpandedUserId] = useState(null);
+    const [pendingRoleChange, setPendingRoleChange] = useState(null);
 
     useEffect(() => {
         async function load() {
@@ -52,13 +54,16 @@ export default function AdminUsers() {
         }
     };
 
-    const handleRoleChange = async (user, newRoleId) => {
+    const executeRoleChange = async () => {
+        if (!pendingRoleChange) return;
+        const { user, newRoleId } = pendingRoleChange;
         try {
             await updateUserRole(user.id, newRoleId);
             setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role_id: newRoleId } : u));
         } catch (err) {
             alert('Failed to update role');
         }
+        setPendingRoleChange(null);
     };
 
     const toggleExpand = (userId) => {
@@ -128,7 +133,7 @@ export default function AdminUsers() {
                                                 className="liquid-glass-input"
                                                 style={{ padding: '6px 12px', fontSize: 'var(--fs-xs)', width: 'auto', backgroundColor: 'var(--glass-bg)' }}
                                                 value={u.role_id}
-                                                onChange={(e) => handleRoleChange(u, Number(e.target.value))}
+                                                onChange={(e) => setPendingRoleChange({ user: u, newRoleId: Number(e.target.value) })}
                                                 onClick={(e) => e.stopPropagation()}
                                             >
                                                 {roles.map(r => (
@@ -222,6 +227,13 @@ export default function AdminUsers() {
                     </tbody>
                 </table>
             </div>
+
+            <ReAuthModal
+                isOpen={!!pendingRoleChange}
+                onClose={() => setPendingRoleChange(null)}
+                onConfirm={executeRoleChange}
+                actionName={pendingRoleChange ? `Change role of ${pendingRoleChange.user.username || pendingRoleChange.user.email} to ${roles.find(r => r.id === pendingRoleChange.newRoleId)?.name}` : ''}
+            />
         </div>
     );
 }

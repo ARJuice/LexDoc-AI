@@ -207,14 +207,6 @@ export async function uploadDocument(file, { title, deptId, tagIds, customTags =
         }
     }
 
-    // 6. Log the upload in audit_logs
-    await supabase.from('audit_logs').insert({
-        user_id: uploaderId,
-        doc_id: doc.id,
-        action: 'UPLOAD',
-        details: `Uploaded ${title} [${accessLevel}]`,
-    });
-
     return doc;
 }
 
@@ -271,19 +263,23 @@ export const ACCESS_LEVEL_INFO = {
 
 // Expiry options for the upload form
 export const EXPIRY_OPTIONS = [
-    { value: '', label: 'Permanent (no expiry)' },
+    { value: '', label: 'Default (5 months)' },
     { value: '7', label: '1 week' },
     { value: '14', label: '2 weeks' },
     { value: '30', label: '1 month' },
     { value: '60', label: '2 months' },
     { value: '90', label: '3 months' },
     { value: '180', label: '6 months' },
+    { value: 'permanent', label: 'Permanent (No Expiry)' },
 ];
 
 export const calculateExpiryDate = (daysStr) => {
-    if (!daysStr) return null;
+    if (daysStr === 'permanent') return null;
+    let days = Number(daysStr);
+    // If no value is specified, default to 5 months (150 days)
+    if (!daysStr) days = 150; 
     const d = new Date();
-    d.setDate(d.getDate() + Number(daysStr));
+    d.setDate(d.getDate() + days);
     return d.toISOString();
 };
 
@@ -343,17 +339,6 @@ export async function deleteDocument(docId) {
     // After successful DB deletion, delete from Storage
     if (docData && docData.storage_path) {
         await supabase.storage.from(docData.storage_bucket || 'docs').remove([docData.storage_path]);
-    }
-
-    // Log deletion
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-        await supabase.from('audit_logs').insert({
-            user_id: (await supabase.from('users').select('id').eq('google_id', user.id).maybeSingle()).data?.id,
-            doc_id: null,
-            action: 'DELETE',
-            details: `Document ${docId} deleted`,
-        });
     }
 }
 

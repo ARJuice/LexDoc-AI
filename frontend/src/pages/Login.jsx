@@ -1,21 +1,41 @@
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sparkles, Info } from 'lucide-react';
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
 import './Login.css';
 
 export default function Login() {
-    const { signInWithGoogle, authError } = useAuth();
+    const { signInWithGoogle, authError, session, loading } = useAuth();
     const pageRef = useRef(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
+        if (session && !loading) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [session, loading, navigate]);
+
+    useEffect(() => {
+        if (loading || session) return; // Don't animate if we're loading or about to redirect
         const el = pageRef.current;
         if (!el) return;
         gsap.fromTo(el.querySelector('.login-card'),
             { opacity: 0, y: 30, scale: 0.97 },
             { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'power3.out' }
         );
-    }, []);
+    }, [loading, session]);
+
+    if (loading) {
+        return (
+            <div className="loading-screen">
+                <div className="loading-spinner"></div>
+                <p>Establishing secure connection...</p>
+            </div>
+        );
+    }
+
+    if (session) return null; // Avoid flashing login UI before redirect happens
 
     return (
         <div ref={pageRef} className="login-page">

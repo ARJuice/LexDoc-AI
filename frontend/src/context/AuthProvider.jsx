@@ -25,17 +25,20 @@ export default function AuthProvider({ children }) {
             .select('*, roles(*), departments(*)')
             .eq('email', email)
             .maybeSingle();
-        if (error) console.error('fetchProfile error:', error);
-        return data;
+        
+        if (error) {
+            console.error('fetchProfile error:', error);
+            throw error; // Throw to let callers know it failed (e.g., offline)
+        }
+        return data; // Returns object if found, or null if not registered
     }, []);
 
     // On mount + auth state changes
     useEffect(() => {
-        // Get current session
+        // Get current session initially
         supabase.auth.getSession().then(({ data: { session: s } }) => {
             setSession(s);
             if (s?.user?.email) {
-                // Domain check
                 const domain = s.user.email.split('@')[1];
                 if (domain !== ALLOWED_DOMAIN) {
                     setAuthError(`Only @${ALLOWED_DOMAIN} accounts are allowed.`);
@@ -44,15 +47,16 @@ export default function AuthProvider({ children }) {
                     setLoading(false);
                     return;
                 }
-                fetchProfile(s.user.email).then(p => {
-                    setProfile(p);
-                    setLoading(false);
-                });
+                fetchProfile(s.user.email)
+                    .then(p => setProfile(p))
+                    .catch(() => { /* Keep profile null/old on initial failure */ })
+                    .finally(() => setLoading(false));
             } else {
                 setLoading(false);
             }
         });
 
+        // Listen for token refreshes or logins
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
             setSession(s);
             if (s?.user?.email) {
@@ -65,12 +69,19 @@ export default function AuthProvider({ children }) {
                     return;
                 }
                 setAuthError(null);
-                fetchProfile(s.user.email).then(p => {
-                    setProfile(p);
-                    if (_event === 'SIGNED_IN' && p) {
-                        logUserAuth(p.id, 'Logged in via Google/Email');
-                    }
-                });
+                
+                // When waking from sleep, network might be down. Don't wipe existing profile on error.
+                fetchProfile(s.user.email)
+                    .then(p => {
+                        setProfile(p);
+                        if (_event === 'SIGNED_IN' && p) {
+                            logUserAuth(p.id, 'Logged in via Google/Email');
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Profile refresh failed (likely offline). Retaining existing profile.");
+                        // Do not call setProfile(null) here!
+                    });
             } else {
                 setProfile(null);
             }
@@ -111,10 +122,12 @@ export default function AuthProvider({ children }) {
 
     const refreshProfile = useCallback(() => {
         if (session?.user?.email) {
-            return fetchProfile(session.user.email).then(setProfile);
+            return fetchProfile(session.user.email)
+                .then(p => { setProfile(p); return p; })
+                .catch(err => { console.error('Refresh failed', err); return profile; });
         }
         return Promise.resolve();
-    }, [session, fetchProfile]);
+    }, [session, fetchProfile, profile]);
 
     // Check if the user needs to set up their account (Google verified but no public.users row)
     const needsSetup = session && !loading && !profile;

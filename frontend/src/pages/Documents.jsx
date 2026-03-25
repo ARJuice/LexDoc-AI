@@ -5,6 +5,7 @@ import { FileText, Search, Grid3x3, List, ArrowDownUp, Lock, Tag, ChevronDown, T
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
 import CustomSelect from '../components/ui/CustomSelect';
+import ReAuthModal from '../components/auth/ReAuthModal';
 import {
     fetchDocuments, fetchDepartments, fetchTags, fetchSummaries,
     getTagColor, sortTagsByPriority, formatDate, formatFileSize,
@@ -39,7 +40,7 @@ export default function Documents() {
     const [bulkMode, setBulkMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [deleting, setDeleting] = useState(false);
-    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+    const [confirmAction, setConfirmAction] = useState(null); // { type: 'single', id } or { type: 'bulk' }
 
     const roleLevel = profile?.roles?.access_level || 0;
     const isBulkAllowed = canUserBulkDelete(profile);
@@ -109,29 +110,25 @@ export default function Documents() {
     }, []);
 
     // ---- Delete handlers ----
-    const handleSingleDelete = async (docId) => {
+    const executeDelete = async () => {
+        if (!confirmAction) return;
         setDeleting(true);
+
         try {
-            await deleteDocument(docId);
-            setDocuments(prev => prev.filter(d => d.id !== docId));
+            if (confirmAction.type === 'single') {
+                await deleteDocument(confirmAction.id);
+                setDocuments(prev => prev.filter(d => d.id !== confirmAction.id));
+            } else if (confirmAction.type === 'bulk') {
+                await bulkDeleteDocuments([...selectedIds]);
+                setDocuments(prev => prev.filter(d => !selectedIds.has(d.id)));
+                setSelectedIds(new Set());
+                setBulkMode(false);
+            }
         } catch (e) {
             alert('Delete failed: ' + (e.message || 'Unknown error'));
         }
-        setConfirmDeleteId(null);
-        setDeleting(false);
-    };
 
-    const handleBulkDelete = async () => {
-        if (selectedIds.size === 0) return;
-        setDeleting(true);
-        try {
-            await bulkDeleteDocuments([...selectedIds]);
-            setDocuments(prev => prev.filter(d => !selectedIds.has(d.id)));
-            setSelectedIds(new Set());
-            setBulkMode(false);
-        } catch (e) {
-            alert('Bulk delete failed: ' + (e.message || 'Unknown error'));
-        }
+        setConfirmAction(null);
         setDeleting(false);
     };
 
@@ -172,7 +169,7 @@ export default function Documents() {
                             {bulkMode && selectedIds.size > 0 && (
                                 <button
                                     className="btn btn-danger"
-                                    onClick={handleBulkDelete}
+                                    onClick={() => setConfirmAction({ type: 'bulk' })}
                                     disabled={deleting}
                                     data-hoverable
                                     style={{ fontSize: 'var(--fs-sm)', padding: 'var(--space-2) var(--space-4)' }}
@@ -351,7 +348,7 @@ export default function Documents() {
                                         <button
                                             className="doc-delete-btn"
                                             title="Delete document"
-                                            onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(doc.id); }}
+                                            onClick={(e) => { e.stopPropagation(); setConfirmAction({ type: 'single', id: doc.id }); }}
                                             data-hoverable
                                         >
                                             <Trash2 size={14} />
@@ -397,30 +394,13 @@ export default function Documents() {
                 </div>
             )}
 
-            {/* Single-delete confirmation modal */}
-            {confirmDeleteId && createPortal(
-                <div className="delete-confirm-overlay" onClick={() => setConfirmDeleteId(null)}>
-                    <div className="delete-confirm-modal card" onClick={(e) => e.stopPropagation()}>
-                        <Trash2 size={32} style={{ color: 'var(--color-danger)', marginBottom: 'var(--space-3)' }} />
-                        <h3 style={{ marginBottom: 'var(--space-2)' }}>Delete Document?</h3>
-                        <p style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginBottom: 'var(--space-5)' }}>
-                            This action cannot be undone. The document and all associated data will be permanently removed.
-                        </p>
-                        <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
-                            <button className="btn btn-ghost" onClick={() => setConfirmDeleteId(null)} data-hoverable>Cancel</button>
-                            <button
-                                className="btn btn-danger"
-                                onClick={() => handleSingleDelete(confirmDeleteId)}
-                                disabled={deleting}
-                                data-hoverable
-                            >
-                                {deleting ? 'Deleting...' : 'Delete'}
-                            </button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
+            {/* Secure Re-Auth Modal for Deletion */}
+            <ReAuthModal 
+                isOpen={!!confirmAction} 
+                onClose={() => setConfirmAction(null)} 
+                onConfirm={executeDelete} 
+                actionName={confirmAction?.type === 'bulk' ? `Permanently Delete ${selectedIds.size} Documents` : 'Permanently Delete Document'} 
+            />
         </div>
     );
 }

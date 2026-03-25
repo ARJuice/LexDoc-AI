@@ -1,0 +1,108 @@
+.reauth-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000; /* Higher than sidebar/topbar */
+}
+
+/* Dark mode overrides if needed, but the above is universally okay */
+.dark .reauth-overlay {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.reauth-modal {
+    width: 90%;
+    max-width: 450px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: center;
+}
+
+.reauth-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reauth-icon {
+    color: var(--primary-color);
+}
+
+.reauth-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.reauth-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: var(--text-muted);
+}
+
+.reauth-action-name {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .reauth-action-name {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.reauth-subtext {
+    font-size: 0.9rem;
+}
+
+.reauth-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* Buttons */
+.reauth-actions .liquid-glass-btn {
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.reauth-actions .liquid-glass-btn.primary {
+    background: rgba(var(--primary-color-rgb), 0.15);
+    color: var(--primary-color);
+}
+
+.reauth-actions .liquid-glass-btn.primary:hover {
+    background: rgba(var(--primary-color-rgb), 0.25);
+    border-color: rgba(var(--primary-color-rgb), 0.4);
+}
+
+.reauth-actions .liquid-glass-btn.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+}
+
+.reauth-actions .liquid-glass-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
