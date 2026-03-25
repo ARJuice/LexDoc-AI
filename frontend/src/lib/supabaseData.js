@@ -107,9 +107,9 @@ export async function fetchEventsByDocId(docId) {
 export async function fetchNotifications(userId) {
     const { data, error } = await supabase
         .from('notifications')
-        .select('*, events(*)')
+        .select('*')
         .eq('user_id', userId)
-        .order('notify_at', { ascending: false });
+        .order('created_at', { ascending: false });
     if (error) { console.error('fetchNotifications:', error); return []; }
     return data;
 }

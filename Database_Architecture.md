@@ -16,7 +16,7 @@ The database has been designed and strictly adhered to **Third Normal Form (3NF)
 
 ### Third Normal Form (3NF)
 **Rule:** Must be in 2NF, and there should be no transitive dependencies (non-key attributes cannot depend on other non-key attributes).
-- **Application:** In the `users` table, we store the `dept_id` and `role_id` as foreign keys. We *do not* store `dept_name` or `role_name` directly in the `users` table. If a department's name changes, we only update the `departments` table without needing to touch a single row in the `users` table.
+- **Application:** In the `users` table, we store the `dept_id` and `role_id` as foreign keys. We *do not* store `dept_name` or `role_name` directly in the `users` table. If a department's name changes, we only update the `departments` table without needing to touch a single row in the `users` table. The `users` table also distinctly captures conditionally required fields (`sr_no`, `class`, `semester`) natively without messy JSON blobs.
 
 ## 3. Database Triggers & Automated Auditing
 To ensure that critical security metadata is captured reliably—regardless of whether the frontend API is bypassed—we employ **PostgreSQL Triggers** and **Stored Procedures**. 
@@ -40,9 +40,15 @@ Supabase provides PostgreSQL Row-Level Security (RLS). Every query made by the f
 - **Data Isolation**: Students cannot query other departments' documents. The database forcibly filters `SELECT` responses based on the executing user's `current_setting('request.jwt.claims')`.
 - **RBAC Enforcement**: The database policies independently inspect the user's role hierarchy (checking if the user's `role_id` maps to an `access_level >= 10` for admin operations).
 
+## 6. Access-Aware Notification System
+Combining Triggers and RLS, the database handles broadcasting events contextually.
+- **Trigger**: `notify_on_urgent_document` executes immediately `AFTER INSERT ON document_tags`.
+- **Logic**: It inspects the `documents` accessibility (`access_level`, `dept_ids`) and pushes isolated rows to the `notifications` table *only* for the `users` mapped properly within the RBAC context. 
+- **Auto-Cleanup**: A `pg_cron` routine schedules `delete-old-notifications` periodically to expire old rows past `7 days`.
+
 ---
 
-## 6. Required SQL Setup (Execute in Supabase SQL Editor)
+## 7. Required SQL Setup (Execute in Supabase SQL Editor)
 
 To implement the sophisticated triggers and automated jobs described in this architecture, execute the following SQL in your Supabase Dashboard's SQL Editor:
 

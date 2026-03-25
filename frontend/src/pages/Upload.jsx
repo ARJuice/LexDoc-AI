@@ -42,7 +42,8 @@ export default function Upload() {
         fetchTags().then(setTags);
     }, []);
 
-    const PRIORITY_TAGS = tags.filter(t => t.type && t.type.toUpperCase() === 'PRIORITY');
+    // Students (access_level < 5) cannot select "Urgent" or other PRIORITY tags
+    const PRIORITY_TAGS = roleLevel >= 5 ? tags.filter(t => t.type && t.type.toUpperCase() === 'PRIORITY') : [];
     const RECENT_TAGS = tags.filter(t => t.type && t.type.toUpperCase() === 'LABEL').slice(0, 5);
     const PRIORITY_TAG_IDS = PRIORITY_TAGS.map(tag => tag.id);
     const selectedPriorityId = formData.tags.find(tagId => PRIORITY_TAG_IDS.includes(tagId));

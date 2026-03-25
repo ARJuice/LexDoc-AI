@@ -1,0 +1,154 @@
+.notification-panel {
+    position: absolute;
+    top: calc(100% + var(--space-4));
+    right: 0;
+    width: 380px;
+    max-height: 480px;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-xl);
+    transform-origin: top right;
+}
+
+@media (max-width: 640px) {
+    .notification-panel {
+        width: 320px;
+        right: -20px;
+    }
+}
+
+.notif-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.notif-header h3 {
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.notif-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: none;
+    padding: var(--space-1);
+    transition: color 0.2s;
+}
+
+.notif-close-btn:hover {
+    color: var(--color-danger);
+}
+
+.notif-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-2);
+}
+
+.notif-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8);
+    color: var(--text-secondary);
+    text-align: center;
+    font-size: var(--fs-sm);
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    cursor: none;
+    transition: background 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.notif-item:hover {
+    background: var(--glass-surface-hover);
+}
+
+.notif-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) scaleY(0);
+    width: 3px;
+    height: 60%;
+    background: var(--color-primary);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    transition: transform 0.3s;
+}
+
+.notif-item.unread::before {
+    transform: translateY(-50%) scaleY(1);
+}
+
+.notif-icon-wrapper {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+}
+.dark .notif-icon-wrapper {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.notif-content {
+    flex: 1;
+    padding-right: var(--space-6);
+}
+
+.notif-message {
+    font-size: var(--fs-sm);
+    color: var(--text-primary);
+    font-weight: 500;
+    margin: 0 0 var(--space-1) 0;
+    line-height: 1.4;
+}
+
+.notif-time {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+}
+
+.notif-delete-btn {
+    position: absolute;
+    right: var(--space-3);
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: none;
+    padding: var(--space-2);
+    border-radius: 50%;
+    opacity: 0;
+    transition: all 0.2s;
+}
+
+.notif-item:hover .notif-delete-btn {
+    opacity: 1;
+}
+
+.notif-delete-btn:hover {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}

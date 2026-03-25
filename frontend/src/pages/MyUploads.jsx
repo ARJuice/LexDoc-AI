@@ -117,7 +117,9 @@ export default function MyUploads() {
             <div className="docs-header">
                 <div>
                     <h2 className="page-title">My Uploads</h2>
-                    <p className="page-subtitle">Documents uploaded by you</p>
+                    <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--fs-sm)', marginTop: 'var(--space-1)' }}>
+                        {myDocs.length} document{myDocs.length !== 1 ? 's' : ''} uploaded by you
+                    </p>
                 </div>
 
                 <div className="docs-toolbar" style={{ marginTop: 'var(--space-4)' }}>

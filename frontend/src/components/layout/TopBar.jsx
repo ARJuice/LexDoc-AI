@@ -2,6 +2,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Search } from 'lucide-react';
 import ThemeToggle from '../ui/ThemeToggle';
+import NotificationPanel from '../ui/NotificationPanel';
 import { setPanelOpen } from '../../store/store';
 import { useAuth } from '../../context/AuthProvider';
 import './TopBar.css';
@@ -24,7 +25,7 @@ export default function TopBar() {
                 />
             </div>
 
-            <div className="topbar-actions">
+            <div className="topbar-actions" style={{ position: 'relative' }}>
                 <ThemeToggle />
 
                 <button
@@ -38,6 +39,8 @@ export default function TopBar() {
                         <span className="notification-badge">{unreadCount}</span>
                     )}
                 </button>
+
+                <NotificationPanel />
 
                 <div className="topbar-user" data-hoverable onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
                     <div className="topbar-avatar">
