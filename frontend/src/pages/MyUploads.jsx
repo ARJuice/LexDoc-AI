@@ -215,7 +215,7 @@ export default function MyUploads() {
                             <h4 className="doc-card-title">{doc.title}</h4>
                             {summary
                                 ? <p className="doc-card-summary">{summary.content.slice(0, 120)}...</p>
-                                : <p className="doc-card-summary" style={{ fontStyle: 'italic' }}>No summary available yet.</p>
+                                : <p className="doc-card-summary" style={{ fontStyle: 'italic' }}>No summary generated</p>
                             }
                             <div className="doc-card-dept">
                                 {docDepts.length > 0 ? docDepts.map(d => d.name).join(', ') : doc.is_general ? 'General' : '—'}

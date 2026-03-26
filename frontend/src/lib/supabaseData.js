@@ -98,6 +98,44 @@ export async function fetchEvents() {
     return data;
 }
 
+/**
+ * Fetch only upcoming (future) events, limited to `limit` results.
+ * For RANGE events, checks end_date >= today.
+ * For single events, checks event_date >= today.
+ */
+export async function fetchUpcomingEvents(limit = 5) {
+    const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD
+    // Fetch future single-date events
+    const { data: singleEvents, error: e1 } = await supabase
+        .from('events')
+        .select('*')
+        .not('event_date', 'is', null)
+        .gte('event_date', todayIST)
+        .order('event_date', { ascending: true });
+    if (e1) console.error('fetchUpcomingEvents single:', e1);
+
+    // Fetch future RANGE events (end_date >= today)
+    const { data: rangeEvents, error: e2 } = await supabase
+        .from('events')
+        .select('*')
+        .not('end_date', 'is', null)
+        .gte('end_date', todayIST)
+        .order('start_date', { ascending: true });
+    if (e2) console.error('fetchUpcomingEvents range:', e2);
+
+    // Merge and sort by nearest date
+    const all = [...(singleEvents || []), ...(rangeEvents || [])];
+    // Deduplicate by id
+    const seen = new Set();
+    const unique = all.filter(e => { if (seen.has(e.id)) return false; seen.add(e.id); return true; });
+    unique.sort((a, b) => {
+        const dateA = a.event_date || a.start_date || '9999-12-31';
+        const dateB = b.event_date || b.start_date || '9999-12-31';
+        return dateA.localeCompare(dateB);
+    });
+    return unique.slice(0, limit);
+}
+
 export async function fetchEventsByDocId(docId) {
     const { data, error } = await supabase.from('events').select('*').eq('doc_id', docId).order('event_date');
     if (error) { console.error('fetchEventsByDocId:', error); return []; }
@@ -307,7 +345,8 @@ export const formatFileSize = (bytes) => {
 export const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString('en-IN', {
-        day: 'numeric', month: 'short', year: 'numeric'
+        day: 'numeric', month: 'short', year: 'numeric',
+        timeZone: 'Asia/Kolkata'
     });
 };
 
@@ -315,12 +354,18 @@ export const formatDateTime = (dateStr) => {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleString('en-IN', {
         day: 'numeric', month: 'short', year: 'numeric',
-        hour: '2-digit', minute: '2-digit'
+        hour: '2-digit', minute: '2-digit',
+        timeZone: 'Asia/Kolkata'
     });
 };
 
 export const getDaysUntil = (dateStr) => {
-    const diff = new Date(dateStr) - new Date();
+    if (!dateStr) return 999;
+    // Use IST midnight for both dates
+    const targetDate = new Date(dateStr + 'T00:00:00+05:30');
+    const nowIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    nowIST.setHours(0, 0, 0, 0);
+    const diff = targetDate - nowIST;
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
 };
 
@@ -445,4 +490,36 @@ export async function logUserAuth(userId, details) {
     }
 }
 
+// ---- AI Summary Generation ----
+export async function generateSummary(docId, forceRegenerate = false) {
+    try {
+        const { data, error } = await supabase.functions.invoke('generate-summary', {
+            body: { doc_id: docId, force_regenerate: forceRegenerate },
+        });
 
+        if (error) {
+            // supabase-js wraps non-2xx as FunctionsHttpError with a context
+            let msg = 'Failed to invoke AI summarization';
+            if (error.message) msg = error.message;
+            // Try to extract the JSON body from the error context
+            try {
+                if (error.context && typeof error.context.json === 'function') {
+                    const body = await error.context.json();
+                    if (body?.error) msg = body.error;
+                }
+            } catch (_) { /* ignore parse failures */ }
+            console.error('generateSummary error:', msg);
+            throw new Error(msg);
+        }
+
+        if (data?.error) {
+            throw new Error(data.error);
+        }
+
+        return data;
+    } catch (err) {
+        // Ensure we always throw a proper Error with a string message
+        if (err instanceof Error) throw err;
+        throw new Error(String(err) || 'Unknown AI error');
+    }
+}

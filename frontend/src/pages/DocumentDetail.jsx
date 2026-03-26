@@ -5,7 +5,8 @@ import gsap from 'gsap';
 import { supabase } from '../lib/supabase';
 import {
     fetchDocumentById, fetchSummaryByDocId, fetchTags, fetchDepartments, fetchEventsByDocId,
-    getTagColor, sortTagsByPriority, formatDate, formatFileSize
+    getTagColor, sortTagsByPriority, formatDate, formatFileSize,
+    generateSummary
 } from '../lib/supabaseData';
 import './DocumentDetail.css';
 
@@ -32,6 +33,36 @@ export default function DocumentDetail() {
     const [departments, setDepartments] = useState([]);
     const [docEvents, setDocEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // AI Summary generation state
+    const [generating, setGenerating] = useState(false);
+    const [genError, setGenError] = useState(null);
+    const [genStep, setGenStep] = useState(0);
+    const summaryRef = useRef(null);
+    const genStepRef = useRef(null);
+
+    const GEN_STEPS = [
+        { text: 'Downloading document...', delay: 0 },
+        { text: 'Parsing document via LlamaParse...', delay: 2000 },
+        { text: 'Connecting to Arcee AI Trinity...', delay: 12000 },
+        { text: 'Generating summary...', delay: 18000 },
+        { text: 'Extracting events & deadlines...', delay: 25000 },
+        { text: 'Almost done, finalizing...', delay: 35000 },
+    ];
+
+    // Cycle through generation steps
+    useEffect(() => {
+        if (!generating) { setGenStep(0); return; }
+        const timers = GEN_STEPS.slice(1).map((step, i) =>
+            setTimeout(() => {
+                setGenStep(i + 1);
+                if (genStepRef.current) {
+                    gsap.fromTo(genStepRef.current, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' });
+                }
+            }, step.delay)
+        );
+        return () => timers.forEach(clearTimeout);
+    }, [generating]);
 
     // Viewer state
     const [fileUrl, setFileUrl] = useState(null);
@@ -173,6 +204,38 @@ export default function DocumentDetail() {
         if (summary) navigator.clipboard.writeText(summary.content);
     };
 
+    const handleGenerateSummary = async (forceRegenerate = false) => {
+        setGenerating(true);
+        setGenError(null);
+        try {
+            const result = await generateSummary(doc.id, forceRegenerate);
+            if (result && result.summary) {
+                setSummary({
+                    content: String(result.summary),
+                    model_used: result.model || '',
+                    created_at: result.created_at || new Date().toISOString()
+                });
+                // GSAP success animation
+                requestAnimationFrame(() => {
+                    if (summaryRef.current) {
+                        gsap.fromTo(summaryRef.current,
+                            { opacity: 0, y: 12, scale: 0.98 },
+                            { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'power2.out' }
+                        );
+                    }
+                });
+            } else {
+                setGenError('No summary returned. The AI models may be temporarily unavailable.');
+            }
+        } catch (err) {
+            console.error('Summary generation failed:', err);
+            const msg = (err instanceof Error ? err.message : String(err)) || 'Failed to generate summary';
+            setGenError(msg);
+        } finally {
+            setGenerating(false);
+        }
+    };
+
     const handleDownload = async () => {
         if (!doc?.storage_path) return;
         try {
@@ -299,15 +362,62 @@ export default function DocumentDetail() {
                         <div className="ai-section-header">
                             <h3>AI Summary</h3>
                             <div className="ai-section-actions">
-                                <button className="btn btn-ghost" onClick={copyToClipboard} data-hoverable><Copy size={14} /> Copy</button>
-                                <button className="btn btn-ghost" data-hoverable><RefreshCw size={14} /> Regenerate</button>
+                                {summary && (
+                                    <button className="btn btn-ghost" onClick={copyToClipboard} data-hoverable><Copy size={14} /> Copy</button>
+                                )}
+                                <button
+                                    className="btn btn-ghost"
+                                    onClick={() => handleGenerateSummary(!!summary)}
+                                    disabled={generating}
+                                    data-hoverable
+                                >
+                                    {generating
+                                        ? <><Loader2 size={14} className="viewer-spinner" /> Generating...</>
+                                        : summary
+                                            ? <><RefreshCw size={14} /> Regenerate</>
+                                            : <><RefreshCw size={14} /> Generate Summary</>
+                                    }
+                                </button>
                             </div>
                         </div>
-                        {summary ? (
-                            <p className="ai-summary-content">{summary.content}</p>
-                        ) : (
-                            <p className="ai-no-data">No summary available yet. AI summary will appear here once generated.</p>
-                        )}
+                        <div ref={summaryRef}>
+                            {generating ? (
+                                <div className="ai-generating">
+                                    <Loader2 size={24} className="viewer-spinner" />
+                                    <p ref={genStepRef} className="ai-gen-step-text">{GEN_STEPS[genStep]?.text}</p>
+                                    <div className="ai-gen-progress-track">
+                                        <div className="ai-gen-progress-bar" style={{ width: `${Math.min(((genStep + 1) / GEN_STEPS.length) * 100, 100)}%` }} />
+                                    </div>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)' }}>Step {genStep + 1} of {GEN_STEPS.length}</span>
+                                </div>
+                            ) : genError ? (
+                                <div className="ai-gen-error">
+                                    <AlertCircle size={18} style={{ color: 'var(--color-danger)' }} />
+                                    <p>{genError}</p>
+                                    <button className="btn btn-ghost" onClick={() => handleGenerateSummary(true)} data-hoverable>
+                                        <RefreshCw size={14} /> Retry
+                                    </button>
+                                </div>
+                            ) : summary ? (
+                                <>
+                                    <p className="ai-summary-content">{summary.content}</p>
+                                    {summary.model_used && (
+                                        <span className="ai-model-tag">Generated by {summary.model_used}</span>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="ai-no-summary">
+                                    <p className="ai-no-data">No summary generated.</p>
+                                    <button
+                                        className="btn btn-primary ai-generate-btn"
+                                        onClick={() => handleGenerateSummary(false)}
+                                        data-hoverable
+                                    >
+                                        <RefreshCw size={14} /> Generate AI Summary
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Tags */}

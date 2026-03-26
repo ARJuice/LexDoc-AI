@@ -4,7 +4,7 @@ import { FileText, Upload, Sparkles, Clock, Calendar, AlertTriangle } from 'luci
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
 import {
-    fetchDocuments, fetchSummaries, fetchEvents,
+    fetchDocuments, fetchSummaries, fetchUpcomingEvents,
     fetchTags, fetchDepartments,
     formatDate, getDaysUntil, getTagColor, sortTagsByPriority,
     filterDocumentsByAccess
@@ -28,7 +28,7 @@ export default function Dashboard() {
             const [docs, sums, evts, t, d] = await Promise.all([
                 fetchDocuments(),
                 fetchSummaries(),
-                fetchEvents(),
+                fetchUpcomingEvents(5),
                 fetchTags(),
                 fetchDepartments(),
             ]);
@@ -49,9 +49,8 @@ export default function Dashboard() {
     const myUploads = profile ? documents.filter(d => d.uploader_id === profile.id).length : 0;
     const totalSummaries = summaries.length;
     const recentDocs = [...accessibleDocs].sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at)).slice(0, 5);
-    const upcomingEvents = [...events].sort(
-        (a, b) => new Date(`${a.event_date}T${a.event_time || '00:00'}`) - new Date(`${b.event_date}T${b.event_time || '00:00'}`)
-    );
+    // events are already sorted by fetchUpcomingEvents(5)
+    const upcomingEvents = events;
 
     const getDocTags = (doc) => (doc.tag_ids || []).map(id => tags.find(t => t.id === id)).filter(Boolean);
     const getDocDepts = (doc) => (doc.dept_ids || []).map(id => departments.find(d => d.id === id)).filter(Boolean);
@@ -182,26 +181,42 @@ export default function Dashboard() {
                             </p>
                         )}
                         {upcomingEvents.map((event, index) => {
-                            const daysUntil = getDaysUntil(event.event_date);
+                            const isRange = event.event_type === 'RANGE';
+                            const effectiveDate = isRange ? event.start_date : event.event_date;
+                            const daysUntil = getDaysUntil(effectiveDate);
                             const isUrgent = daysUntil <= 7;
-                            const isPast = daysUntil < 0;
+                            const typeIcon = {
+                                DEADLINE: <AlertTriangle size={14} />,
+                                EXAM: <AlertTriangle size={14} />,
+                                MEETING: <Clock size={14} />,
+                                EVENT: <Calendar size={14} />,
+                                RANGE: <Calendar size={14} />,
+                            };
                             return (
-                                <div key={event.id} className={`event-row ${isPast ? 'past' : ''}`}>
+                                <div key={event.id} className={`event-row`}>
                                     <div className="event-rail" aria-hidden="true">
                                         <span className="event-timeline-dot"></span>
                                         {index < upcomingEvents.length - 1 && <span className="event-timeline-line"></span>}
                                     </div>
-                                    <div className={`event-item ${isUrgent ? 'urgent' : ''} ${isPast ? 'past' : ''}`}>
+                                    <div className={`event-item ${isUrgent ? 'urgent' : ''}`}>
                                         <div className="event-type-badge">
-                                            {event.event_type === 'DEADLINE' ? <AlertTriangle size={14} /> : <Clock size={14} />}
+                                            {typeIcon[event.event_type] || <Clock size={14} />}
                                             <span>{event.event_type}</span>
                                         </div>
                                         <div className="event-title">{event.title}</div>
                                         <div className="event-description">{event.description}</div>
                                         <div className="event-footer">
-                                            <span className="event-date">{formatDate(event.event_date)}</span>
+                                            <span className="event-date">
+                                                {isRange
+                                                    ? `${formatDate(event.start_date)} → ${formatDate(event.end_date)}`
+                                                    : formatDate(event.event_date)
+                                                }
+                                            </span>
                                             <span className={`event-countdown ${isUrgent ? 'badge-danger' : 'badge-accent'}`}>
-                                                {isPast ? 'Overdue' : `${daysUntil}d left`}
+                                                {isRange
+                                                    ? `${daysUntil}d to start`
+                                                    : `${daysUntil}d left`
+                                                }
                                             </span>
                                         </div>
                                     </div>

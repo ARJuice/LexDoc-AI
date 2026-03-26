@@ -143,3 +143,38 @@ SELECT cron.schedule(
 -- delete the actual file in Supabase Storage. You should configure a 
 -- Storage webhook or Edge Function if physical deletion is strictly required.
 ```
+
+## 8. AI Summarization Pipeline
+
+LexDoc AI generates document summaries using an OpenRouter-powered Edge Function with a prioritized free-model fallback chain.
+
+### 8.1. `ai_cache` Table
+A dedicated caching table ensures that repeated summary requests for the same document don't hit external APIs:
+- **Schema**: `id` (PK), `doc_id` (UNIQUE FK→documents), `summary_text`, `model_used`, `created_at`, `updated_at`
+- **RLS**: Authenticated users can SELECT; service_role has full access.
+- Cache is checked before every AI request. If a cached entry exists and `force_regenerate` is not set, the cached summary is returned instantly.
+
+### 8.2. Edge Function: `generate-summary`
+Deployed as a Supabase Edge Function (Deno runtime), invoked via `supabase.functions.invoke()`.
+
+**Model Priority Chain (all free):**
+1. `meta-llama/llama-3.3-70b:free` (default)
+2. `google/gemini-2.0-flash:free` (parallel race after 2s)
+3. `deepseek/deepseek-chat:free` (sequential fallback)
+4. `openrouter/auto` (final fallback)
+
+**Optimization Strategy:**
+- **Parallel Race**: Model 1 fires immediately; Model 2 fires after a 2-second delay. Whichever responds first wins — the loser is aborted via `AbortController`.
+- **Timeout Control**: Each model request has a 7-second timeout enforced via `AbortController`.
+- **Response Validation**: AI output must be non-empty, >20 characters, and not contain refusal phrases.
+
+**Data Flow:**
+1. Frontend invokes edge function with `{ doc_id, force_regenerate }`
+2. Edge function checks `ai_cache` → returns immediately if cached
+3. Downloads document from Supabase Storage, extracts text
+4. Runs through model chain until a valid response is received
+5. On success: `UPSERT` into `ai_cache`, `INSERT` into `summaries`, `UPDATE documents.processing_status = 'summarized'`
+6. On failure: `UPDATE documents.processing_status = 'failed'`
+
+### 8.3. `summaries` Table Integration
+The existing `summaries` table (`id`, `doc_id`, `content`, `model_used`, `created_at`) stores every generated summary. The `model_used` column tracks which AI model produced the result for audit purposes.

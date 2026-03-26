@@ -361,7 +361,7 @@ export default function Documents() {
                             
                             {summary 
                                 ? <p className="doc-card-summary">{summary.content.slice(0, 120)}...</p> 
-                                : <p className="doc-card-summary" style={{ fontStyle: 'italic' }}>No summary available yet.</p>
+                                : <p className="doc-card-summary" style={{ fontStyle: 'italic' }}>No summary generated</p>
                             }
 
                             <div className="doc-card-dept">
