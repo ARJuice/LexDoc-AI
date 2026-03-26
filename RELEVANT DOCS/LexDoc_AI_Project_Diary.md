@@ -104,8 +104,8 @@ ____________________________________________________________________
 [To be filled at the end of the project]
 
 **Future Scope & Recommendations:**
-- Extend the AI summarization to support multi-modal documents (images, scanned PDFs).
-- Implement an automated deadline extraction and notification system.
+- Extend the AI summarization to support multi-modal documents (images, scanned PDFs) via standard ingestion pipelines.
+- Implemented an automated deadline & event extraction system combining LlamaParse and advanced reasoning LLMs (Arcee AI: Trinity Large Preview / Gemini-2.0-Flash), which compresses multi-day schedules automatically.
 
 **Final SDG Impact Assessment:**
 [To be filled at the end of the project]

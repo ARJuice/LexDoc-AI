@@ -157,11 +157,16 @@ A dedicated caching table ensures that repeated summary requests for the same do
 ### 8.2. Edge Function: `generate-summary`
 Deployed as a Supabase Edge Function (Deno runtime), invoked via `supabase.functions.invoke()`.
 
-**Model Priority Chain (all free):**
-1. `meta-llama/llama-3.3-70b:free` (default)
-2. `google/gemini-2.0-flash:free` (parallel race after 2s)
-3. `deepseek/deepseek-chat:free` (sequential fallback)
-4. `openrouter/auto` (final fallback)
+**Model Priority Chain:**
+1. `arcee-ai/trinity-large-preview:free` (primary for high quality summarization)
+2. `google/gemini-2.0-flash:free` (fast fallback)
+3. `meta-llama/llama-3.3-70b:free`
+4. `deepseek/deepseek-chat:free`
+
+**Document Extraction Strategy:**
+- Text extraction for DOCX and PDF documents is directly delegated to the cloud-based **LlamaParse API**.
+- LlamaParse reliably extracts clean markdown preserving structure, tables, and lists.
+- If a PDF resists LlamaParse extraction (returns insufficient text < 50 chars), it automatically falls back to **OCR.space API**.
 
 **Optimization Strategy:**
 - **Parallel Race**: Model 1 fires immediately; Model 2 fires after a 2-second delay. Whichever responds first wins — the loser is aborted via `AbortController`.

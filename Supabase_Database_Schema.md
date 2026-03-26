@@ -2,9 +2,9 @@
 
 ## 1. Architecture Overview
 - **Frontend:** React + GSAP animations
-- **Backend:** FastAPI
+- **Backend / Serverless:** Supabase Edge Functions (Deno)
 - **Database:** PostgreSQL (managed by Supabase)
-- **AI Service:** Local LLM via Ollama
+- **AI Service:** OpenRouter (Arcee AI: Trinity Large Preview & Gemini 2.0 Flash) & LlamaParse API
 
 ## 2. Authentication Logic
 The system uses a hybrid authentication model:
@@ -118,12 +118,14 @@ AI-extracted meetings and deadlines from documents.
 | `id` | PK | Event ID |
 | `doc_id` | FK | references `documents.id` |
 | `title` | TEXT | Event title |
-| `event_type` | TEXT | `DEADLINE` or `MEETING` |
-| `event_date` | DATE | Date of event |
+| `event_type` | TEXT | `DEADLINE`, `MEETING`, `EXAM`, `EVENT`, `RANGE` |
+| `event_date` | DATE | Date of event (nullable for RANGE events) |
 | `event_time` | TIME | Time of event |
 | `description` | TEXT | Event description |
 | `created_by_ai` | BOOLEAN | Whether AI-extracted |
 | `created_at` | TIMESTAMP | Creation time |
+| `start_date` | DATE | Start date for RANGE events |
+| `end_date` | DATE | End date for RANGE events |
 
 #### 11. notifications
 Reminder system for upcoming events.
@@ -230,12 +232,14 @@ CREATE TABLE events (
  id SERIAL PRIMARY KEY,
  doc_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
  title TEXT NOT NULL,
- event_type TEXT CHECK (event_type IN ('DEADLINE', 'MEETING')),
- event_date DATE NOT NULL,
+ event_type TEXT CHECK (event_type IN ('DEADLINE', 'MEETING', 'EXAM', 'EVENT', 'RANGE')),
+ event_date DATE,
  event_time TIME,
  description TEXT,
  created_by_ai BOOLEAN DEFAULT TRUE,
- created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ start_date DATE,
+ end_date DATE
 );
 
 CREATE TABLE notifications (
@@ -275,15 +279,13 @@ CREATE INDEX IF NOT EXISTS idx_users_dept_id               ON users(dept_id);
 ---
 
 ## 7. AI Processing Architecture Workflow
-The AI service runs as a separate FastAPI microservice connected to a local Ollama model.
-1. **Document uploaded**
-2. **Backend extracts text**
-3. **Text split into chunks**
-4. **Each chunk summarized**
-5. **Final summary generated**
-6. **Stored in `summaries` table**
-
-*(Note: For current development phase, the AI service functions as a placeholder backend step to verify document upload workflows to Supabase and PostgreSQL bindings.)*
+The AI service runs entirely on a serverless Edge Function hosted by Supabase (`generate-summary`).
+1. **Document uploaded** (to Supabase Storage)
+2. **Edge Function Triggered** (by frontend explicit call)
+3. **Extraction**: File is routed to **LlamaParse API** for pristine markdown extraction (OCR.space fallback for difficult PDFs).
+4. **Summary Generation**: Text is sent to **OpenRouter API** (Arcee AI: Trinity Large Preview) for summarization.
+5. **Event Extraction**: Text is sent concurrently to extract actionable deadlines, exams, and ranges.
+6. **Stored**: Cache and results are written to `summaries`, `events`, and `ai_cache` tables.
 
 ---
 
