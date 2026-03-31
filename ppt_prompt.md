@@ -32,10 +32,10 @@ Please structure the presentation exactly as follows:
 
 ### Slide 4: Front end and Back end Details
 - **Frontend:** Built with React, Vite. Styled with custom CSS targeting a "liquid glassmorphism" aesthetic. Uses GSAP and Lenis for smooth scrolling and advanced micro-animations.
-- **Backend/Serverless:** Operated entirely on Supabase Edge Functions (Deno runtime).
+- **Backend/Serverless:** Operated via dual Supabase Edge Functions (`generate-summary` & `parse-docx`) running on Deno.
 - **AI Stack:** 
-  - Extraction: LlamaParse API (with OCR.space fallback for difficult PDFs).
-  - Summarization & Event Reasoning: OpenRouter API routing to 'Arcee AI: Trinity Large Preview' (as primary) with 'Gemini 2.0 Flash' as fallback.
+  - Extraction: LlamaParse API (with OCR.space fallback) and a dedicated deterministic `parse-docx` native buffer parser.
+  - Summarization & Event Reasoning: OpenRouter API sequential fallback configuration. Defaults to 'Arcee AI: Trinity Large Preview' with an instantaneous timeout fallback to 'Gemini 2.0 Flash'.
 - **Database:** PostgreSQL (managed natively by Supabase).
 
 ### Slide 5: Database Architecture & Core SQL Features

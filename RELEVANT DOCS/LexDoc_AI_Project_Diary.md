@@ -59,16 +59,17 @@ ____________________________________________________________________
 **Faculty Feedback & Suggestions:** 
 ____________________________________________________________________
 
-### Week 4: Performance Optimization & AI Insights Prep
+### Week 4: Performance Optimization & AI Insights Integration
 **Date:** _________________
 **Tasks Completed:** 
 - Resolved database N+1 query issues.
 - Implemented lazy loading for React components and memoized React contexts.
-- Prepared the summaries table for the FastAPI/Ollama local LLM integration.
+- Developed and deployed dual Supabase Edge Functions (`generate-summary`, `parse-docx`) using Deno.
+- Integrated OpenRouter APIs utilizing `arcee-ai/trinity-large-preview:free` and `gemini-2.0-flash` for serverless AI summarization and event parsing.
 **Challenges Faced:** 
-- Balancing initial load times with the heavy GSAP and frontend dependencies.
+- Navigating cold starts and rate limits within the Edge Functions; resolved by building a robust sequential model fallback loop with a 45-second timeout parameter.
 **Next Steps:** 
-- Connect the FastAPI backend to the Ollama LLM for document summarization.
+- Finalize the automated deadline extraction and notification system.
 **Faculty Feedback & Suggestions:** 
 ____________________________________________________________________
 
@@ -82,7 +83,7 @@ The frontend and core database architectures are complete and optimized. Authent
 **Key Learnings & Improvements:**
 - Mastered React performance optimization techniques (memoization, lazy loading).
 - Gained deep understanding of PostgreSQL schema design and Supabase Row Level Security.
-- Learned to model infrastructure for integrating local LLMs (Ollama) into a traditional web stack.
+- Learned to model robust serverless infrastructure by deploying TypeScript Edge functions (Deno) and coordinating third-party Large Language Model APIs (OpenRouter).
 
 **Adjustments in Methodology:**
 - Shifted from basic API-based permission checks to strict Database-level security (RLS) to enforce departmental boundaries at the lowest level reliably.

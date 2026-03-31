@@ -54,6 +54,9 @@ export default function AuthProvider({ children }) {
             } else {
                 setLoading(false);
             }
+        }).catch(err => {
+            console.error('getSession error:', err);
+            setLoading(false);
         });
 
         // Listen for token refreshes or logins
@@ -75,7 +78,10 @@ export default function AuthProvider({ children }) {
                     .then(p => {
                         setProfile(p);
                         if (_event === 'SIGNED_IN' && p) {
-                            logUserAuth(p.id, 'Logged in via Google/Email');
+                            if (!sessionStorage.getItem('lexdoc_auth_logged_in_' + p.id)) {
+                                logUserAuth(p.id, 'Logged in via Google/Email');
+                                sessionStorage.setItem('lexdoc_auth_logged_in_' + p.id, 'true');
+                            }
                         }
                     })
                     .catch(err => {
@@ -115,6 +121,7 @@ export default function AuthProvider({ children }) {
         if (profile?.id) {
             await logUserAuth(profile.id, 'Logged out');
         }
+        sessionStorage.removeItem('lexdoc_auth_logged_in_' + profile?.id);
         await supabase.auth.signOut();
         setSession(null);
         setProfile(null);

@@ -344,7 +344,8 @@ export const formatFileSize = (bytes) => {
 
 export const formatDate = (dateStr) => {
     if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString('en-IN', {
+    const s = typeof dateStr === 'string' ? dateStr.replace(' ', 'T') + (dateStr.endsWith('Z') || dateStr.includes('+') ? '' : 'Z') : dateStr;
+    return new Date(s).toLocaleDateString('en-IN', {
         day: 'numeric', month: 'short', year: 'numeric',
         timeZone: 'Asia/Kolkata'
     });
@@ -352,7 +353,8 @@ export const formatDate = (dateStr) => {
 
 export const formatDateTime = (dateStr) => {
     if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleString('en-IN', {
+    const s = typeof dateStr === 'string' ? dateStr.replace(' ', 'T') + (dateStr.endsWith('Z') || dateStr.includes('+') ? '' : 'Z') : dateStr;
+    return new Date(s).toLocaleString('en-IN', {
         day: 'numeric', month: 'short', year: 'numeric',
         hour: '2-digit', minute: '2-digit',
         timeZone: 'Asia/Kolkata'

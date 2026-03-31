@@ -158,20 +158,20 @@ A dedicated caching table ensures that repeated summary requests for the same do
 Deployed as a Supabase Edge Function (Deno runtime), invoked via `supabase.functions.invoke()`.
 
 **Model Priority Chain:**
-1. `arcee-ai/trinity-large-preview:free` (primary for high quality summarization)
+1. `arcee-ai/trinity-large-preview:free` (Default primary model for high-quality summarization)
 2. `google/gemini-2.0-flash:free` (fast fallback)
 3. `meta-llama/llama-3.3-70b:free`
 4. `deepseek/deepseek-chat:free`
 
 **Document Extraction Strategy:**
-- Text extraction for DOCX and PDF documents is directly delegated to the cloud-based **LlamaParse API**.
-- LlamaParse reliably extracts clean markdown preserving structure, tables, and lists.
+- Text extraction for standard generic documents is directly delegated to the cloud-based **LlamaParse API**.
 - If a PDF resists LlamaParse extraction (returns insufficient text < 50 chars), it automatically falls back to **OCR.space API**.
+- For deeply structured Word documents, a dedicated `parse-docx` Edge Function utilizing `mammoth` and `cheerio` efficiently converts binary DOCX buffers into highly structured HTML and arrays of sections to maintain heading hierarchies natively without AI prompting overhead.
 
 **Optimization Strategy:**
-- **Parallel Race**: Model 1 fires immediately; Model 2 fires after a 2-second delay. Whichever responds first wins — the loser is aborted via `AbortController`.
-- **Timeout Control**: Each model request has a 7-second timeout enforced via `AbortController`.
-- **Response Validation**: AI output must be non-empty, >20 characters, and not contain refusal phrases.
+- **Sequential Fallback Loop**: To ensure maximum reliability and cost-efficiency without rate-limiting, models are queried sequentially. If the default Arcee model fails or times out, the system automatically catches the error and instantaneously queries the next available model in the array (Gemini 2.0).
+- **Timeout Control**: Each model request has an enforced `MODEL_TIMEOUT_MS` cutoff (45 seconds) via `AbortController` to prevent hanging edge functions and minimize compute billing.
+- **Response Validation**: AI output must be non-empty and >20 characters.
 
 **Data Flow:**
 1. Frontend invokes edge function with `{ doc_id, force_regenerate }`

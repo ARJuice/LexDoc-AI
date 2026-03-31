@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useAuth } from '../../context/AuthProvider';
 import { toggleSidebar } from '../../store/store';
 import {
-    LayoutDashboard, FileText, Upload, Sparkles, Users, Building2,
+    LayoutDashboard, FileText, Upload, Calendar, Users, Building2,
     ClipboardList, User, LogOut, ChevronLeft, ChevronRight, FolderUp
 } from 'lucide-react';
 import { useRef, useEffect } from 'react';
@@ -17,7 +17,7 @@ const navItems = [
     { path: '/documents', label: 'Documents', icon: FileText },
     { path: '/upload', label: 'Upload', icon: Upload },
     { path: '/my-uploads', label: 'My Uploads', icon: FolderUp },
-    { path: '/insights', label: 'AI Insights', icon: Sparkles },
+    { path: '/insights', label: 'Calendar', icon: Calendar },
     { divider: true },
     { path: '/admin/users', label: 'Users', icon: Users, admin: true },
     { path: '/admin/departments', label: 'Departments', icon: Building2, admin: true },

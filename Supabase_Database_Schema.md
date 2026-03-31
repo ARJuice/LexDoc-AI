@@ -283,8 +283,8 @@ The AI service runs entirely on a serverless Edge Function hosted by Supabase (`
 1. **Document uploaded** (to Supabase Storage)
 2. **Edge Function Triggered** (by frontend explicit call)
 3. **Extraction**: File is routed to **LlamaParse API** for pristine markdown extraction (OCR.space fallback for difficult PDFs).
-4. **Summary Generation**: Text is sent to **OpenRouter API** (Arcee AI: Trinity Large Preview) for summarization.
-5. **Event Extraction**: Text is sent concurrently to extract actionable deadlines, exams, and ranges.
+4. **Summary Generation**: Text is sent to the **OpenRouter API** using a sequential fallback array (defaulting to Arcee AI: Trinity Large Preview) for summarization.
+5. **Event Extraction**: Upon successful summarization, text is sent sequentially to extract actionable deadlines, exams, and ranges using deterministic TypeScript parsing over LLM outputs.
 6. **Stored**: Cache and results are written to `summaries`, `events`, and `ai_cache` tables.
 
 ---
