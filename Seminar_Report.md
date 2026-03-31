@@ -186,9 +186,71 @@ The core objectives of the LexDoc AI project are as follows:
 
 ---
 
-# CHAPTER 2: LITERATURE SURVEY
-Current document management systems in colleges mostly rely on legacy infrastructure or basic Google Drive links. Studies show that centralized databases utilizing basic role tables are significantly prone to unauthorized access if internal API layers fail. Furthermore, while AI summarization is prevalent, traditional implementations involve heavy backend servers (e.g., Python FastAPI) which inherently suffer from massive cold starts and scaling costs when processing files on concurrent uploads. Research into serverless technologies indicates that utilizing Edge Functions (Deno runtime) massively offsets infrastructure delay, allowing lightweight client interactions directly routed to Cloud LLM APIs.
+# CHAPTER 2: OBJECTIVES
 
+### 2.1 GOALS AND DELIVERABLES
+The primary goal of the LexDoc AI project is to design and implement an intelligent, user-friendly platform that automatically generates concise summaries of uploaded documents while extracting critical timelines and maintaining the core context of the original content. The system aims to simplify the process of distributing and reading relevant academic information through a scalable pipeline of serverless services like the LlamaParse API and OpenRouter LLMs.
+
+**Major Goals**
+1. Develop a full-stack web application that allows users to upload, summarize, and manage PDF and DOCX files.
+2. Integrate advanced AI summarization and deterministic data extraction models using cloud-based APIs (OpenRouter, LlamaParse) via serverless Deno Edge Functions.
+3. Implement ironclad document management, including robust storage, retrieval, and automated lifecycle deletion (e.g., via `pg_cron`), managed entirely within PostgreSQL.
+4. Design an aesthetically premium, intuitive React-based interface utilizing liquid glassmorphism, GSAP micro-animations, and responsive navigation for a seamless user experience.
+5. Ensure data privacy and institutional security by keeping unauthorized users from accessing inter-departmental documents through un-bypassable Row-Level Security (RLS).
+6. Provide a scalable serverless architecture, eliminating infrastructure cold-starts and allowing for instant backend responsiveness during concurrent uploads.
+
+**Expected Deliverables**
+- A fully functional LexDoc AI document management web application.
+- Integrated multi-modal AI engine for abstractive text summarization and automatic event mapping.
+- Secure Supabase PostgreSQL database schema equipped with strict RLS policies, audit log triggers, and an automated data purging system.
+- A complete visual frontend demonstrating cutting-edge UI/UX paradigms implemented over standard structural elements.
+- A comprehensive project report with design, implementation, and system performance documentation.
+
+### 2.2 TECHNICAL OBJECTIVES
+The technical objectives of this project focus on the engineering and implementation aspects that enable reliable, scalable, and highly intelligent summarization. These objectives define the technological foundation on which LexDoc AI is built.
+
+**1. Frontend Development (React & Vite):**
+- Develop an engaging, responsive, and accessible user interface focusing on premium aesthetics.
+- Implement robust features for secure file uploads, summary display, and calendar integration based on extracted event dates.
+- Integrate the `supabase-js` client to handle real-time database subscriptions and secure backend communication.
+
+**2. Backend Development (Supabase & Deno Edge Functions):**
+- Create highly scalable, stateless serverless Edge Functions for intercepting document uploads securely.
+- Handle varied document structures natively by extracting DOCX buffers locally and leveraging the LlamaParse API for complex PDF tables.
+- Route cleaned markdown texts safely to the OpenRouter API (utilizing Arcee AI models with Gemini 2.0 Flash fallbacks) for context-aware AI summary and event processing.
+
+**3. Database Management (PostgreSQL):**
+- Store user documents, generated summaries, structured events, and system metadata securely in a fully normalized 3NF database schema.
+- Implement automated database maintenance mechanisms, such as structured `events` tables and automatic data-aging deletion rules using `pg_cron`.
+- Support and enforce strict departmental data isolation at the lowest level via Row-Level Security (RLS) constraints and tracking activity with trigger-based audit logging.
+
+**4. AI and NLP Integration:**
+- Implement precise abstractive summarization capable of parsing lengthy college circulars and regulations.
+- Develop fallback systems to ensure the serverless functions utilize alternate endpoints locally or externally when prime models lack availability.
+- Evaluate the returned AI text using TypeScript to deterministically strip structured JSON dates and parse sequential multi-day events logically.
+
+**5. Security and Performance:**
+- Use Supabase Auth paired with database mapping to restrict UI-level components and limit physical Database rows natively.
+- Optimize serverless endpoint invocations to minimize wait-times and reduce overhead during large document upload loops.
+- Avoid large backend scaling costs by pushing intensive machine-learning computations back to third-party endpoints, ensuring instant response times globally.
+
+### 2.3 SKILL DEVELOPMENT
+The development of the LexDoc AI project has provided the team with valuable exposure to a broad range of highly modern technical paradigms and professional skills that are actively sought in the software industry.
+
+**Technical Skills Acquired:**
+1. Full-stack modern web development using Next-Generation tooling like React 18, Vite, and Node.
+2. Edge computing and lightweight backend API execution utilizing the Deno runtime over standard Python frameworks.
+3. Advanced Multi-Modal AI integration, prompt engineering, and deterministic data extraction from vast unstructured data chunks.
+4. Deep Relational Database design involving Third Normal Form (3NF), complex PostgreSQL trigger programming, and the programmatic enforcement of Row-Level Security.
+5. High-fidelity UI/UX design implementation mapping utilizing bleeding-edge libraries like the GreenSock Animation Platform (GSAP) and Lenis for fluid, physics-based rendering.
+6. Real-time logging and performance debugging using cloud deployment dashboards and Supabase studio metrics.
+
+**Soft Skills and Team Skills:**
+1. Architectural planning, weighing the trade-offs of monolithic backend servers against resilient serverless paradigms.
+2. Analytical thinking and logical problem-solving while designing deterministic TypeScript algorithms to process dynamic human dates.
+3. Effective documentation structuring and the translation of complex backend mechanics into comprehensible, visually supported technical reports.
+4. Time management for meeting aggressive product milestones inside a strict deployment window.
+5. Absolute adaptability in pivoting from traditional technologies to learning fresh ecosystem stacks rapidly to optimize execution speeds.
 ---
 
 # CHAPTER 3: PROPOSED SYSTEM
