@@ -211,6 +211,7 @@ The technical objectives of this project focus on the engineering and implementa
 
 **1. Frontend Development (React & Vite):**
 - Develop an engaging, responsive, and accessible user interface focusing on premium aesthetics.
+- Employ React lazy loading and component-level code splitting for core application sections to drastically minimize initial payload sizes and accelerate rendering.
 - Implement robust features for secure file uploads, summary display, and calendar integration based on extracted event dates.
 - Integrate the `supabase-js` client to handle real-time database subscriptions and secure backend communication.
 
@@ -256,7 +257,7 @@ The development of the LexDoc AI project has provided the team with valuable exp
 # CHAPTER 3: PROPOSED SYSTEM
 
 LexDoc AI is proposed as an intelligent multi-modal platform. The architecture shifts the paradigm by placing immense structural integrity strictly inside the target PostgreSQL database utilizing Supabase.
-- **Frontend Layer:** Built using React, Vite, GSAP, and Lenis for aggressive visual fidelity.
+- **Frontend Layer:** Built using React, Vite, GSAP, and Lenis for aggressive visual fidelity, leveraging dynamic lazy loading to parse heavy animation routines or complex structural DOM pieces only when strictly accessed.
 - **Backend Edge Functions:** Deno-based custom edge functions intercept uploaded documents. 
 - **Processing Engine:** LlamaParse API decodes complex PDFs, while a dedicated `parse-docx` logic structures Microsoft Word. The data is transferred via a sequential array to the `arcee-ai/trinity-large-preview:free` model which creates contextually-aware summaries.
 - **Database Layer:** Supabase manages a 3NF scheme. RLS ensures logical isolation matching the physical users. Automated `pg_cron` functions routinely sweep and delete aged documents beyond their 150-day TTL.
