@@ -188,7 +188,7 @@ The core objectives of the LexDoc AI project are as follows:
 
 # CHAPTER 2: OBJECTIVES
 
-### 2.1 PROJECT GOALS
+### 2.1 GOALS AND DELIVERABLES
 The primary goal of the LexDoc AI project is to design and implement an intelligent, user-friendly platform that automatically generates concise summaries of uploaded documents while extracting critical timelines and maintaining the core context of the original content. The system aims to simplify the process of distributing and reading relevant academic information through a scalable pipeline of serverless services like the LlamaParse API and OpenRouter LLMs.
 
 **Major Goals**
@@ -199,13 +199,6 @@ The primary goal of the LexDoc AI project is to design and implement an intellig
 5. Ensure data privacy and institutional security by keeping unauthorized users from accessing inter-departmental documents through un-bypassable Row-Level Security (RLS).
 6. Provide a scalable serverless architecture, eliminating infrastructure cold-starts and allowing for instant backend responsiveness during concurrent uploads.
 
-### 2.2 SCOPE AND DELIVERABLES
-
-**Project Scope**
-The scope of the LexDoc AI project encompasses the development, deployment, and testing of an end-to-end intelligent document management solution tailored for educational institutions. 
-- **In-Scope**: The system captures and processes unstructured college documents (DOCX, PDF) uploaded by authorized administrators. It extracts critical metadata, creates AI-driven summaries, structures event timelines, and manages the data in a hyper-secure PostgreSQL database utilizing Row-Level Security. The frontend provides a premium, responsive interface for end-users to view and consume this processed data securely.
-- **Out-of-Scope**: The project strictly focuses on official institutional broadcast documentation and explicitly does not include building in-house Large Language Models from scratch, nor does it attempt to replace standard inter-personal messaging apps. Additionally, physical hardware infrastructure management is out-of-scope, as the solution uses an entirely serverless cloud-native pipeline.
-
 **Expected Deliverables**
 - A fully functional LexDoc AI document management web application.
 - Integrated multi-modal AI engine for abstractive text summarization and automatic event mapping.
@@ -213,7 +206,7 @@ The scope of the LexDoc AI project encompasses the development, deployment, and 
 - A complete visual frontend demonstrating cutting-edge UI/UX paradigms implemented over standard structural elements.
 - A comprehensive project report with design, implementation, and system performance documentation.
 
-### 2.3 TECHNICAL OBJECTIVES
+### 2.2 TECHNICAL OBJECTIVES
 The technical objectives of this project focus on the engineering and implementation aspects that enable reliable, scalable, and highly intelligent summarization. These objectives define the technological foundation on which LexDoc AI is built.
 
 **1. Frontend Development (React & Vite):**
@@ -242,7 +235,7 @@ The technical objectives of this project focus on the engineering and implementa
 - Optimize serverless endpoint invocations to minimize wait-times and reduce overhead during large document upload loops.
 - Avoid large backend scaling costs by pushing intensive machine-learning computations back to third-party endpoints, ensuring instant response times globally.
 
-### 2.4 SKILL DEVELOPMENT
+### 2.3 SKILL DEVELOPMENT
 The development of the LexDoc AI project has provided the team with valuable exposure to a broad range of highly modern technical paradigms and professional skills that are actively sought in the software industry.
 
 **Technical Skills Acquired:**
@@ -261,7 +254,27 @@ The development of the LexDoc AI project has provided the team with valuable exp
 5. Absolute adaptability in pivoting from traditional technologies to learning fresh ecosystem stacks rapidly to optimize execution speeds.
 ---
 
-# CHAPTER 3: PROPOSED SYSTEM
+# CHAPTER 3: SCOPE AND DELIVERABLES
+
+### 3.1 PROJECT SCOPE
+The scope of the LexDoc AI project is constrained primarily to serving internal document management requirements within academic departments. The system encompasses the following core areas:
+- **Intelligent Ingestion:** Supporting the upload and secure storage of standard academic formats, restricted initially to PDF and DOCX files.
+- **Automated Summarization:** Generating condensed, contextually-aware summaries to save reading time for administrators, faculty, and students.
+- **Data Extraction:** Automatically mapping deadlines, exam schedules, and seminar dates extracted from unstructured text directly into a structured database format.
+- **Role-Based Governance:** Facilitating deep departmental data sovereignty, ensuring that standard roles cannot mistakenly or maliciously access highly-classified internal circulars.
+The system is explicitly scoped to focus on asynchronous, persistent document distribution and tracking, rather than real-time synchronous chat messaging.
+
+### 3.2 DELIVERABLES
+To successfully fulfill the project's objectives and maintain its defined scope, the deployment consists of several distinct, tangible deliverables:
+1. **Client Application:** A responsive, React-based front-end interface utilizing Vite, Lenis, and GSAP micro-animations to grant users a seamlessly fluid and modern visual experience.
+2. **Serverless AI Hub:** A distributed array of Deno-based Edge Functions to orchestrate document data efficiently between user clients and powerful external Cloud AI processing APIs.
+3. **Database Architecture:** A hardened PostgreSQL instance natively deployed with rigorous Row-Level Security policies, an automated `pg_cron` file-expiry system, and comprehensive trigger-based un-bypassable audit logging.
+4. **Data Science Pipeline:** The custom algorithmic logic mapping external Large Language Models to internal deterministic TypeScript procedures tailored specifically for parsing college events.
+5. **Technical Documentation:** The fully deployed LexDoc AI suite, accompanied by this detailed technical project report delineating the design choices, constraints, and system evaluations.
+
+---
+
+# CHAPTER 4: PROPOSED SYSTEM
 
 LexDoc AI is proposed as an intelligent multi-modal platform. The architecture shifts the paradigm by placing immense structural integrity strictly inside the target PostgreSQL database utilizing Supabase.
 - **Frontend Layer:** Built using React, Vite, GSAP, and Lenis for aggressive visual fidelity, leveraging dynamic lazy loading to parse heavy animation routines or complex structural DOM pieces only when strictly accessed.
@@ -271,7 +284,7 @@ LexDoc AI is proposed as an intelligent multi-modal platform. The architecture s
 
 ---
 
-# CHAPTER 4: DESIGN PHASE
+# CHAPTER 5: DESIGN PHASE
 
 ### Table: Model Fallback Comparisons
 | Representative Approaches | Advantages |
@@ -292,7 +305,7 @@ LexDoc AI is proposed as an intelligent multi-modal platform. The architecture s
 
 ---
 
-# CHAPTER 5: DESIGN DIAGRAMS
+# CHAPTER 6: DESIGN DIAGRAMS
 
 The architecture reflects a typical serverless hierarchy:
 1. **Client Browser (React/GSAP)** interfaces directly with Supabase via the `supabase-js` client. 
@@ -303,7 +316,7 @@ The architecture reflects a typical serverless hierarchy:
 
 ---
 
-# CHAPTER 6: REQUIREMENTS
+# CHAPTER 7: REQUIREMENTS
 
 ### HARDWARE REQUIREMENTS
 1. Processor: Intel core i3 or compatible and above
@@ -318,12 +331,12 @@ The architecture reflects a typical serverless hierarchy:
 
 ---
 
-# CHAPTER 7: EXPECTED RESULTS
+# CHAPTER 8: EXPECTED RESULTS
 
 The implementation is expected to successfully ingest unstructured academic documents and automatically produce human-readable summaries instantly. The database will silently execute Row-Level filtering, meaning unauthorized students cannot manipulate URL parameters to read administrative documents. The `pg_cron` system will silently regulate database bloat, and triggers will actively map malicious and innocent uploads alike inside un-bypassable Audit Logs safely inside PostgreSQL.
 
 ---
 
-# CHAPTER 8: CONCLUSION
+# CHAPTER 9: CONCLUSION
 
 LexDoc AI showcases the immense viability of combining rigorous academic theory regarding classical Database Normalization (3NF) and Trigger programming with bleeding-edge functional paradigms of Serverless Edge Computing and Large Language Models. By resolving the vulnerabilities of standard centralized servers and mitigating the hallucination risks of generic AI prompting, LexDoc AI emerges as a mathematically secure, wildly efficient, and visually stunning standard for educational institutional management.
