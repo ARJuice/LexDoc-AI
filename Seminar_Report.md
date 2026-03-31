@@ -188,7 +188,7 @@ The core objectives of the LexDoc AI project are as follows:
 
 # CHAPTER 2: OBJECTIVES
 
-### 2.1 GOALS AND DELIVERABLES
+### 2.1 PROJECT GOALS
 The primary goal of the LexDoc AI project is to design and implement an intelligent, user-friendly platform that automatically generates concise summaries of uploaded documents while extracting critical timelines and maintaining the core context of the original content. The system aims to simplify the process of distributing and reading relevant academic information through a scalable pipeline of serverless services like the LlamaParse API and OpenRouter LLMs.
 
 **Major Goals**
@@ -199,6 +199,13 @@ The primary goal of the LexDoc AI project is to design and implement an intellig
 5. Ensure data privacy and institutional security by keeping unauthorized users from accessing inter-departmental documents through un-bypassable Row-Level Security (RLS).
 6. Provide a scalable serverless architecture, eliminating infrastructure cold-starts and allowing for instant backend responsiveness during concurrent uploads.
 
+### 2.2 SCOPE AND DELIVERABLES
+
+**Project Scope**
+The scope of the LexDoc AI project encompasses the development, deployment, and testing of an end-to-end intelligent document management solution tailored for educational institutions. 
+- **In-Scope**: The system captures and processes unstructured college documents (DOCX, PDF) uploaded by authorized administrators. It extracts critical metadata, creates AI-driven summaries, structures event timelines, and manages the data in a hyper-secure PostgreSQL database utilizing Row-Level Security. The frontend provides a premium, responsive interface for end-users to view and consume this processed data securely.
+- **Out-of-Scope**: The project strictly focuses on official institutional broadcast documentation and explicitly does not include building in-house Large Language Models from scratch, nor does it attempt to replace standard inter-personal messaging apps. Additionally, physical hardware infrastructure management is out-of-scope, as the solution uses an entirely serverless cloud-native pipeline.
+
 **Expected Deliverables**
 - A fully functional LexDoc AI document management web application.
 - Integrated multi-modal AI engine for abstractive text summarization and automatic event mapping.
@@ -206,7 +213,7 @@ The primary goal of the LexDoc AI project is to design and implement an intellig
 - A complete visual frontend demonstrating cutting-edge UI/UX paradigms implemented over standard structural elements.
 - A comprehensive project report with design, implementation, and system performance documentation.
 
-### 2.2 TECHNICAL OBJECTIVES
+### 2.3 TECHNICAL OBJECTIVES
 The technical objectives of this project focus on the engineering and implementation aspects that enable reliable, scalable, and highly intelligent summarization. These objectives define the technological foundation on which LexDoc AI is built.
 
 **1. Frontend Development (React & Vite):**
@@ -235,7 +242,7 @@ The technical objectives of this project focus on the engineering and implementa
 - Optimize serverless endpoint invocations to minimize wait-times and reduce overhead during large document upload loops.
 - Avoid large backend scaling costs by pushing intensive machine-learning computations back to third-party endpoints, ensuring instant response times globally.
 
-### 2.3 SKILL DEVELOPMENT
+### 2.4 SKILL DEVELOPMENT
 The development of the LexDoc AI project has provided the team with valuable exposure to a broad range of highly modern technical paradigms and professional skills that are actively sought in the software industry.
 
 **Technical Skills Acquired:**
