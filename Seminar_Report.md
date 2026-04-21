@@ -154,14 +154,26 @@ The administration of academic documents across various college departments is o
 
 | ABBREVIATION | DESCRIPTION |
 |--------------|-------------|
-| **AI** | Artificial Intelligence |
-| **RLS** | Row-Level Security |
 | **3NF** | Third Normal Form |
-| **DBMS** | Database Management System |
-| **JSON** | JavaScript Object Notation |
-| **GSAP** | GreenSock Animation Platform |
-| **LLM** | Large Language Model |
+| **AI** | Artificial Intelligence |
 | **API** | Application Programming Interface |
+| **BaaS** | Backend-as-a-Service |
+| **DBMS** | Database Management System |
+| **DDL** | Data Definition Language |
+| **DOCX** | Office Open XML Document |
+| **FK** | Foreign Key |
+| **GSAP** | GreenSock Animation Platform |
+| **HOD** | Head of Department |
+| **JSON** | JavaScript Object Notation |
+| **JWT** | JSON Web Token |
+| **LLM** | Large Language Model |
+| **OCR** | Optical Character Recognition |
+| **PDF** | Portable Document Format |
+| **PK** | Primary Key |
+| **RBAC** | Role-Based Access Control |
+| **RLS** | Row-Level Security |
+| **UI** | User Interface |
+| **UX** | User Experience |
 
 ---
 
@@ -188,23 +200,16 @@ The core objectives of the LexDoc AI project are as follows:
 
 # CHAPTER 2: OBJECTIVES
 
-### 2.1 GOALS AND DELIVERABLES
+### 2.1 MAJOR GOALS
 The primary goal of the LexDoc AI project is to design and implement an intelligent, user-friendly platform that automatically generates concise summaries of uploaded documents while extracting critical timelines and maintaining the core context of the original content. The system aims to simplify the process of distributing and reading relevant academic information through a scalable pipeline of serverless services like the LlamaParse API and OpenRouter LLMs.
 
-**Major Goals**
+**Target Objectives**
 1. Develop a full-stack web application that allows users to upload, summarize, and manage PDF and DOCX files.
 2. Integrate advanced AI summarization and deterministic data extraction models using cloud-based APIs (OpenRouter, LlamaParse) via serverless Deno Edge Functions.
 3. Implement ironclad document management, including robust storage, retrieval, and automated lifecycle deletion (e.g., via `pg_cron`), managed entirely within PostgreSQL.
 4. Design an aesthetically premium, intuitive React-based interface utilizing liquid glassmorphism, GSAP micro-animations, and responsive navigation for a seamless user experience.
 5. Ensure data privacy and institutional security by keeping unauthorized users from accessing inter-departmental documents through un-bypassable Row-Level Security (RLS).
 6. Provide a scalable serverless architecture, eliminating infrastructure cold-starts and allowing for instant backend responsiveness during concurrent uploads.
-
-**Expected Deliverables**
-- A fully functional LexDoc AI document management web application.
-- Integrated multi-modal AI engine for abstractive text summarization and automatic event mapping.
-- Secure Supabase PostgreSQL database schema equipped with strict RLS policies, audit log triggers, and an automated data purging system.
-- A complete visual frontend demonstrating cutting-edge UI/UX paradigms implemented over standard structural elements.
-- A comprehensive project report with design, implementation, and system performance documentation.
 
 ### 2.2 TECHNICAL OBJECTIVES
 The technical objectives of this project focus on the engineering and implementation aspects that enable reliable, scalable, and highly intelligent summarization. These objectives define the technological foundation on which LexDoc AI is built.
@@ -257,86 +262,177 @@ The development of the LexDoc AI project has provided the team with valuable exp
 # CHAPTER 3: SCOPE AND DELIVERABLES
 
 ### 3.1 PROJECT SCOPE
-The scope of the LexDoc AI project is constrained primarily to serving internal document management requirements within academic departments. The system encompasses the following core areas:
-- **Intelligent Ingestion:** Supporting the upload and secure storage of standard academic formats, restricted initially to PDF and DOCX files.
-- **Automated Summarization:** Generating condensed, contextually-aware summaries to save reading time for administrators, faculty, and students.
-- **Data Extraction:** Automatically mapping deadlines, exam schedules, and seminar dates extracted from unstructured text directly into a structured database format.
-- **Role-Based Governance:** Facilitating deep departmental data sovereignty, ensuring that standard roles cannot mistakenly or maliciously access highly-classified internal circulars.
-The system is explicitly scoped to focus on asynchronous, persistent document distribution and tracking, rather than real-time synchronous chat messaging.
+The scope of the LexDoc AI project is constrained primarily to serving internal document management requirements within academic departments and collegiate institutions. It focuses heavily on digitizing and automating the workflow surrounding formal circulars, notifications, syllabi, and administrative documentation. The system encompasses the following core areas:
+
+- **Intelligent Ingestion & Storage:** Supporting the seamless upload, parsing, and secure cloud storage of standard academic text formats, restricted initially to PDF and DOCX files to ensure processing reliability.
+- **Automated AI Summarization:** Generating condensed, contextually-aware summaries from lengthy documents. This serves to drastically save reading time for administrators, faculty, and students who frequently need to parse multi-page files quickly.
+- **Deterministic Data Extraction:** Automatically scanning for and mapping crucial information—such as internal deadlines, university exam schedules, and seminar dates—extracted directly from unstructured text strings into a highly structured database format suitable for a calendar view.
+- **Role-Based Governance & Privacy:** Facilitating deep departmental data sovereignty. The application explicitly implements theoretical Role-Based Access Control (RBAC) logic at the database level. It establishes strict hierarchies guaranteeing that standard roles (e.g., student accounts) cannot mistakenly or maliciously bypass internal logic to access highly-classified circulars meant strictly for administrative layers.
+- **Administrative Access Control:** Granting administrators comprehensive, dynamic command over institutional data access. This includes the implementation of granular view permissions, the robust capability to dynamically grant or revoke user privileges across the organization, and mechanisms to seamlessly execute secure bulk-insert operations for incoming documents and large student directories.
 
 ### 3.2 DELIVERABLES
-To successfully fulfill the project's objectives and maintain its defined scope, the deployment consists of several distinct, tangible deliverables:
-1. **Client Application:** A responsive, React-based front-end interface utilizing Vite, Lenis, and GSAP micro-animations to grant users a seamlessly fluid and modern visual experience.
-2. **Serverless AI Hub:** A distributed array of Deno-based Edge Functions to orchestrate document data efficiently between user clients and powerful external Cloud AI processing APIs.
-3. **Database Architecture:** A hardened PostgreSQL instance natively deployed with rigorous Row-Level Security policies, an automated `pg_cron` file-expiry system, and comprehensive trigger-based un-bypassable audit logging.
-4. **Data Science Pipeline:** The custom algorithmic logic mapping external Large Language Models to internal deterministic TypeScript procedures tailored specifically for parsing college events.
-5. **Technical Documentation:** The fully deployed LexDoc AI suite, accompanied by this detailed technical project report delineating the design choices, constraints, and system evaluations.
+To successfully fulfill the project's objectives and maintain its defined scope, the deployment encompasses the following distinct, tangible deliverables. Each deliverable serves as a foundational pillar for the architecture's final operational success:
+
+- **Client Application:** A fully functional LexDoc AI document management web application acting as the primary user hub, accessible via any modern browser without requiring native desktop installations.
+- **AI Processing Engine:** An integrated multi-modal AI engine orchestrated across Deno Edge Functions, configured seamlessly for abstractive text summarization and automatic event mapping using custom-tailored Large Language Models.
+- **Database Architecture:** A fortified Supabase PostgreSQL database schema strictly equipped with custom Row-Level Security (RLS) policies, un-bypassable audit log triggers to track every file interaction, and an automated data purging `pg_cron` system to handle absolute document lifecycles.
+- **Client Interface:** A complete visual frontend demonstrating cutting-edge UI/UX paradigms—particularly liquid glassmorphism, dynamic animations, and skeleton loaders—implemented over standard structural elements to grant users a modern, friction-less experience.
+- **Technical Documentation:** A comprehensive project report containing rigorous design constraints, system flow algorithms, implementation analysis, and overall system performance documentation to be submitted for academic evaluation.
 
 ---
 
-# CHAPTER 4: PROPOSED SYSTEM
+# CHAPTER 4: METHODOLOGY
 
-LexDoc AI is proposed as an intelligent multi-modal platform. The architecture shifts the paradigm by placing immense structural integrity strictly inside the target PostgreSQL database utilizing Supabase.
-- **Frontend Layer:** Built using React, Vite, GSAP, and Lenis for aggressive visual fidelity, leveraging dynamic lazy loading to parse heavy animation routines or complex structural DOM pieces only when strictly accessed.
-- **Backend Edge Functions:** Deno-based custom edge functions intercept uploaded documents. 
-- **Processing Engine:** LlamaParse API decodes complex PDFs, while a dedicated `parse-docx` logic structures Microsoft Word. The data is transferred via a sequential array to the `arcee-ai/trinity-large-preview:free` model which creates contextually-aware summaries.
-- **Database Layer:** Supabase manages a 3NF scheme. RLS ensures logical isolation matching the physical users. Automated `pg_cron` functions routinely sweep and delete aged documents beyond their 150-day TTL.
+### 4.1 DEVELOPMENT APPROACH & REQUIREMENT ANALYSIS
+The LexDoc AI project follows an iterative, serverless-first development approach, prioritizing the shifting of core logic directly to the database layer and dynamic edge networks. Supabase was selected as the primary backend platform for PostgreSQL management, Edge Functions, and secure authentication flows. 
+
+Through rigorous requirement analysis, the primary operational bottlenecks identified included handling unstructured academic files (PDFs and DOCX), the need for contextual summarization to save time, deterministic calendar extraction, and the necessity of un-bypassable security controls. By adopting a modular serverless paradigm, components could be built and tested independently before full unified integration, ensuring scalability and robust performance.
+
+### 4.2 CORE ARCHITECTURE DESIGN
+The system's architecture cleanly separates computational concerns across four distinct tiers:
+1. **Frontend Interface:** A highly interactive React application styled with "Liquid Glass" aesthetics, communicating directly and securely with Supabase.
+2. **Serverless Edge Layer:** Deno-based Edge Functions hosted by Supabase, serving as proxy intermediaries to handle API secrets and computationally intensive document extraction tasks.
+3. **Relational Database:** A fully normalized PostgreSQL database utilizing Row-Level Security (RLS) to restrict unauthorized queries inherently.
+4. **AI & Processing Endpoints:** Offloaded machine learning text extraction using LlamaParse and advanced LLMs (via OpenRouter) strictly invoked through secure edge functions.
+
+<!-- IMAGE: System Architecture Flow -->
+
+### 4.3 TOOLS AND TECHNOLOGIES STACK
+The selection of tools and technologies for LexDoc AI was based on serverless reliability, absolute data isolation, and the ability to process unstructured documentation efficiently. 
+
+**Frontend Tools**
+
+| Tool | Purpose |
+|------|---------|
+| **React.js** | Core user interface design and component-based frontend framework |
+| **Vite** | Build tool optimized for extremely fast hot-module-reloading and transpilation |
+| **GSAP** | Advanced animation library establishing fluid "Liquid Glass" physics interfaces |
+
+**Backend & Database Tools**
+
+| Tool | Purpose |
+|------|---------|
+| **Supabase** | Primary Backend-as-a-Service (BaaS) coordinating auth, database, and edge functions |
+| **PostgreSQL** | Relational database (3NF) managing strict Row-Level Security and triggers natively |
+| **Deno Edge Functions** | Serverless TypeScript environment for intercepting API secrets and files securely |
+
+**AI & Parsing Integration**
+
+| Tool | Purpose |
+|------|---------|
+| **OpenRouter API** | Gateway orchestrating multi-modal abstractive models (Arcee AI, Gemini 2.0 Flash) |
+| **LlamaParse API** | Pure proprietary cloud extraction endpoint for complex multi-column PDFs |
+| **OCR.space API** | Dedicated fallback engine for unselectable, image-based legacy document scans |
+
+The combination of these modern serverless technologies ensures that LexDoc AI remains highly scalable and infinitely isolated without the typical bottlenecks associated with localized physical servers.
+
+### 4.4 DATABASE SCHEMA & ENTITY-RELATIONSHIP
+To maintain absolute data integrity and eliminate redundancy, the database utilizes the Third Normal Form (3NF). The schema consists of interconnected structures dynamically linking hierarchical logic with document states. The core tables and their properties include:
+
+- **`roles`**: `id` (PK), `name`, `access_level`
+- **`departments`**: `id` (PK), `name`, `code`
+- **`users`**: `id` (PK), `role_id` (FK), `dept_id` (FK), `username`, `email`, `password_hash`, `google_id`, `is_verified`, `bulk_delete_enabled`, `sr_no`, `semester`, `class`, `created_at`
+- **`documents`**: `id` (PK), `uploader_id` (FK), `title`, `storage_bucket`, `mime_type`, `processing_status`, `is_general`, `uploaded_at`, `expiry_date`
+- **`tags`**: `id` (PK), `name`, `type`, `weight`, `color`
+- **`ai_cache`**: `id` (PK), `doc_id` (FK), `summary_text`, `model_used`, `created_at`, `updated_at`
+- **`summaries`**: `id` (PK), `doc_id` (FK), `content`, `model_used`, `created_at`
+- **`events`**: `id` (PK), `doc_id` (FK), `title`, `event_type`, `event_date`, `event_time`, `description`, `created_by_ai`, `created_at`, `start_date`, `end_date`
+- **`notifications`**: `id` (PK), `user_id` (FK), `doc_id` (FK), `type`, `message`, `is_read`, `created_at`
+- **`audit_logs`**: `id` (PK), `user_id` (FK), `doc_id` (FK), `action`, `details`, `timestamp`
+- **`document_departments`**: `doc_id` (FK), `dept_id` (FK)
+- **`document_tags`**: `doc_id` (FK), `tag_id` (FK)
+
+The database strictly enforces the Third Normal Form (3NF) through these clearly defined tables. Core entities like `users` and `documents` maintain logical independence, utilizing primary keys and structured architectural attributes to store discrete data. To resolve complex many-to-many relationships organically without redundancy, explicit junction tables such as `document_departments` and `document_tags` act as intermediary connectors mapping corresponding foreign keys to base tables securely. This elegant configuration seamlessly bridges access constraints across organizational boundaries, ensuring hierarchical permissions defined in `roles` flow consistently securely throughout the distributed system without data duplication.
+
+Below is the Entity-Relationship (ER) Diagram illustrating these specific relational connections natively:
+
+<!-- IMAGE: Entity-Relationship Diagram (ERD) -->
+
+### 4.5 DOCUMENT INGESTION & PARSING PIPELINE
+To allow modern web browsers to interact with dense historical documents securely without requiring bulky client-side software dependencies, the system aggressively utilizes a complex serverless data parsing pipeline. Upon file upload to a secured Supabase storage bucket, edge functions capture the raw file buffer natively and determine the extraction approach based exclusively on file signature formats.
+
+- **DOCX Processing:** Binary DOCX formats natively undergo conversion to structured Markdown representations strictly within dedicated serverless Deno runtimes. This actively maintains the original document's heading structures natively without consuming costly AI resources or requiring localized user-side desktop applications to render native text previews.
+- **PDF Extraction:** Standard generic documents are explicitly delegated immediately to the cloud-based **LlamaParse API** for pristine document extraction. Conversely, if a native unselectable PDF or a stubborn legacy scan resists parsing effectively, the architecture instantly falls back via automatic error-catching mechanisms to map out text contents precisely utilizing the **OCR.space API**. 
+
+This sophisticated ingestion methodology securely prevents end clients from downloading heavy processing binaries and strongly supports instantaneous mobile ecosystem execution capabilities natively.
+
+### 4.6 IMPLEMENTATION
+Implementation centralized around strictly configuring Postgres entities via standard DDL executions heavily supplemented by native database triggers. Serverless endpoints were programmed deterministically using TypeScript to bypass expensive monolithic server requirements completely.
+
+### 4.7 SYSTEM TESTING
+Testing frameworks fundamentally prioritized simulating proactive malicious cross-departmental operations aggressively to extensively validate backend database isolation integrity, and consistently evaluated the specific external API fallbacks routinely during highly simulated network congestion scenarios.
+
+
 
 ---
 
-# CHAPTER 5: DESIGN PHASE
+# CHAPTER 5: PROJECT ACTIVITIES
 
-### Table: Model Fallback Comparisons
-| Representative Approaches | Advantages |
-|---------------------------|------------|
-| **Arcee AI: Trinity Large** | High precision summarization, handles large academic texts gracefully. |
-| **Gemini 2.0 Flash** | Lightning-fast speeds; acts as a hyper-resilient instantaneous fallback. |
-| **LlamaParse API** | Extracts pristine markdown maintaining tabular layouts where standard OCR fails. |
-| **Native Mammoth parser** | Allows native buffer transformation for `.docx` bypassing API latencies. |
+### 5.1 ROLE-BASED ACCESS CONTROL (RBAC) & GOVERNANCE
+LexDoc AI implements an exceptionally deep permission framework utilizing four primary roles structurally coded directly into the database: 
+- **Admin** (Priority 10)
+- **Head of Department (HOD)** (Priority 7)
+- **Teacher** (Priority 5)
+- **Student** (Priority 1)
 
-### Algorithm: Deterministic Event Extraction
-**Procedure**: `PROCESS_EVENTS(raw_ai_array, today_ist)`
-1. Let `U` denote the set of all extracted event rows outputted by the LLM.
-2. Parse dates natively in TypeScript and assess if the Date >= `today_ist`.
-3. Filter out past events to clean the memory table.
-4. Classify event keywords deterministically (e.g., EXAM, DEADLINE).
-5. Detect sequential ranges (If event dates map sequentially over 3 or more days, compress to a RANGE object encompassing `start_date` and `end_date`).
-6. Insert strictly formatted JSON into the `events` table.
+These roles intrinsically govern application capabilities dynamically mapping functionality to integer arrays. 
+Leveraging powerful PostgreSQL Row-Level Security (RLS) policies, queries inherently restrict data contextually based directly on the active user’s encoded JSON Web Token properties. Access control operates physically at the database level; a student requesting sensitive documents natively fails because the SQL engine forcefully rejects the selection parameters before routing execution back to the client. Revoking or granting structural privileges simply requires administrators to manually modify `users.role_id` configurations, instantly enforcing complex security barriers effortlessly across all linked APIs globally.
+
+<!-- IMAGE: User Roles & RBAC Architecture -->
+
+### 5.2 AUTOMATED DOCUMENT LIFECYCLE & EXPIRY
+To aggressively mitigate systematic database bloating across consecutive academic semesters, documents deliberately maintain highly dynamic lifecycles internally. While users may organically define native deletion boundaries upon specific document uploads, undefined files continuously inherit a strict **150-day (5-month) automatic expiry limit** dynamically fallback natively. 
+
+This process operates absolutely autonomously leveraging the **`pg_cron`** Postgres extension perfectly. Scheduled on a persistent `0 * * * *` (hourly) cycle, the database continuously sweeps the active `documents` table completely, irrevocably purging any row explicitly exceeding its calculated `expiry_date`. Resultingly, this establishes highly efficient temporal data maintenance natively without requiring external monolithic server dependencies or active human maintenance.
+
+### 5.3 SECURITY AUDITING & LOGGING
+Absolute historical context tracking is fundamentally critical within structural document management systems. To guarantee complete oversight, the architecture intentionally implements an invisible `audit_document_changes` SQL trigger designed expressly to execute automatically on every `INSERT` or `DELETE` document operational phase definitively. 
+
+This database-level mechanism seamlessly intercepts the `auth.uid()` identity directly from the connection environment to track behavioral modifications exactly, subsequently producing immutable chronological event logs describing exactly which user manipulated which document. Administrators possess a highly secure dashboard intentionally designed to query and monitor this `audit_logs` table selectively, granting institutional oversight robustly.
+
+<!-- IMAGE: Admin Security & Auditing Dashboard -->
+
+### 5.4 AI SUMMARIZATION & DETERMINISTIC EVENT EXTRACTION
+The architectural core of the ingestion process securely integrates abstractive summarizations generated using multi-modal AI systems utilizing the OpenRouter protocol broadly. The underlying API systematically filters processed document text payloads sequentially through open-source language models. It strictly prioritizes advanced models (`arcee-ai/trinity-large-preview`) for deeply contextual reasoning logically while dynamically failing back to globally resilient infrastructures (`google/gemini-2.0-flash`) instantaneously upon any congestion timeout triggers.
+
+To illustrate the deterministic data pipeline natively, AI-extrapolated event objects inherently undergo a complex sequential validation pass post-generation. Custom TypeScript algorithms structurally evaluate, filter, and correctly format hallucinatory LLM outputs natively to guarantee they definitively match structured JSON definitions before committing data functionally to the production layer.
+
+### 5.5 NOTIFICATION & TAGGING ENGINE
+LexDoc AI employs a heavily unified tagging paradigm seamlessly consolidating global `PRIORITY` metadata parameters, localized `LABEL` definitions, and uniquely custom user descriptors. The framework implements proactive automated notification hooks natively within PostgreSQL natively. 
+
+As documents process correctly, native procedural SQL triggers naturally detect insertions against high-value metadata inputs (specifically “Urgent” or “High” tags). Upon interception, the database utilizes the underlying structural RBAC capabilities natively to determine all authorized users permitted to view the newly created document accurately and comprehensively inject localized targeted alerts directly into specific `notifications` tables instantly.
+
+### 5.6 AUTHENTICATION INTERFACES
+Authentication processes actively integrate highly robust Google OAuth methodologies managed entirely by Supabase Auth protocols natively. This structurally simplifies verification mechanisms completely ensuring internal persistent verification natively correlates precisely against authorized institutional Google Workspace credentials. 
+By delegating initial password management entirely securely out to trusted global architectures, background systems silently manage token authorizations correctly. This completely mitigates localized JSON Web Token credential vulnerabilities from the end user while unequivocally verifying institutional hierarchy classifications perfectly instantly upon successful authentication handshakes.
+
+### 5.7 GUI DESIGN & USER EXPERIENCE
+The LexDoc AI Graphic User Interface was meticulously crafted organically focusing exclusively on removing interactive friction. Breaking visually distinct from historically generic educational layout models, the application implements a rich dark-themed "Liquid Glass" design aesthetic. Responsive micro-animations execute flawlessly utilizing the GSAP framework, structurally guiding user focus gracefully across intricate file uploads matrices, active summarization wait-states, and newly structured event parameters securely without generating blocking or highly aggressive alert popups inherently.
+
+<!-- IMAGE: Client User Interface Display -->
+
+### 5.8 INTEGRATION TESTING
+Consistent with the architecture's modularity, system integrations were rigorously stress-tested across all active features. 
+- **Database & Trigger Testing:** Validated the reliable, chronologically correct execution of `audit_document_changes` logs upon varying data uploads. The `pg_cron` document expiry mechanism was evaluated extensively by artificially fast-forwarding chron-cycles natively. 
+- **AI Fallback Resilience:** Proactively forced OpenRouter API timeouts specifically to observe and measure the time required for Edge Functions to successfully and seamlessly establish secondary connections with Google's Gemini 2.0 Flash fallback structure.
+- **Frontend Interactivity:** UI components were tested during high-latency extraction phases to evaluate visual rendering constraints dynamically. Skeleton loaders effectively mitigated rendering-blocking properties flawlessly, preserving absolute UX comfort.
 
 ---
 
-# CHAPTER 6: DESIGN DIAGRAMS
+# CHAPTER 6: RESULTS & FINDINGS
 
-The architecture reflects a typical serverless hierarchy:
-1. **Client Browser (React/GSAP)** interfaces directly with Supabase via the `supabase-js` client. 
-2. **Supabase Auth** returns a valid JWT mapped to a `role_id` and `dept_id`.
-3. Frontend triggers **Supabase Storage** to save raw Document Blobs.
-4. Frontend invokes **Edge Functions** over HTTPS.
-5. Edge Functions communicate externally to **OpenRouter** and **LlamaParse**, then write deterministically to the underlying **PostgreSQL** database schemas mapping events and logs.
+The implementation of the LexDoc AI platform definitively establishes an immensely scalable, serverless ecosystem successfully unified with an advanced multi-modal Artificial Intelligence engine. The project's most distinct achievement lies in systematically bypassing structurally heavy centralized processing servers by distributing workloads cleanly between Edge environments, sophisticated external AI parsing endpoints, and hyper-optimized frontend logic.
 
----
+The architectural database enforcement produced mathematically superior results compared to standard application-layer security equivalents. By writing comprehensive Row-Level Security rules directly alongside native procedures like automated `pg_cron` routines and the strict `trigger_notify_on_urgent_document` functionality, the application scaled effectively operating autonomously.
 
-# CHAPTER 7: REQUIREMENTS
-
-### HARDWARE REQUIREMENTS
-1. Processor: Intel core i3 or compatible and above
-2. RAM: 4GB and above
-3. Hard Disk: Minimum 50GB storage
-
-### SOFTWARE REQUIREMENTS
-1. Operating System: Windows, Ubuntu, or macOS
-2. Languages: TypeScript, JavaScript, SQL, CSS
-3. Frameworks & Tools: React 18, Vite, Deno Runtime, GSAP, Node.js
-4. Database: PostgreSQL (Supabase Managed)
+The artificial intelligence framework continuously generated highly precise documentation insights. Integrated APIs flawlessly decoded intricate, multi-column collegiate administrative files using modern edge functions (`generate-summary` and `parse-docx`), smoothly transitioning data natively into machine-readable boundaries dynamically optimally for client experiences. Thus, LexDoc AI solidly transitions standard prototypes into a structurally dense and highly premium functional web-application organically.
 
 ---
 
-# CHAPTER 8: EXPECTED RESULTS
+# CHAPTER 7: CONCLUSION
 
-The implementation is expected to successfully ingest unstructured academic documents and automatically produce human-readable summaries instantly. The database will silently execute Row-Level filtering, meaning unauthorized students cannot manipulate URL parameters to read administrative documents. The `pg_cron` system will silently regulate database bloat, and triggers will actively map malicious and innocent uploads alike inside un-bypassable Audit Logs safely inside PostgreSQL.
+The LexDoc AI initiative successfully fulfills its core objective of definitively modernizing internal institutional data distribution processes completely utilizing advanced distributed edge computing and highly accessible abstractive artificial intelligence. By intertwining an exquisitely refined frontend programmatic wrapper with an aggressively secured PostgreSQL environment, the system gracefully resolves the chronic systemic inefficiencies universally associated with physical documentation structures efficiently.
 
----
+Through meticulously executing a Third Normal Form (3NF) relational framework, explicitly implementing un-bypassable database audit tracking natively, establishing dynamic time-to-live file expirations via background cron jobs predictably, and establishing deep model fallback hierarchies integrating next-generation Language Models perfectly, this deployment grants immense practical architectural observations.
 
-# CHAPTER 9: CONCLUSION
-
-LexDoc AI showcases the immense viability of combining rigorous academic theory regarding classical Database Normalization (3NF) and Trigger programming with bleeding-edge functional paradigms of Serverless Edge Computing and Large Language Models. By resolving the vulnerabilities of standard centralized servers and mitigating the hallucination risks of generic AI prompting, LexDoc AI emerges as a mathematically secure, wildly efficient, and visually stunning standard for educational institutional management.
+As corporate entities and institutions progressively manage exponentially larger amounts of unstructured administrative data daily, comprehensive software architectures exactly like LexDoc AI fundamentally construct indispensable systemic operational frameworks. Future application iterations essentially possess unlimited scalable capability extending progressively securely toward mobile cross-platform compatibilities and institutional push-notification architectures broadly natively.
