@@ -20,9 +20,26 @@
     max-width: 440px;
 }
 
-.login-card {
+.login-card.frosted {
     padding: var(--space-10);
-    /* The .glass-card class in index.css handles the rest */
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(24px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .login-card.frosted {
+    background: rgba(40, 40, 40, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(30px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
 }
 
 
@@ -72,6 +89,31 @@
     width: 100%;
     font-size: var(--fs-md);
     font-weight: 600;
+    padding: var(--space-3) var(--space-6);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-full);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.google-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme='dark'] .google-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='dark'] .google-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .google-btn svg {

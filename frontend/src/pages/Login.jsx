@@ -1,13 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Sparkles, Info } from 'lucide-react';
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthProvider';
+import Particles from '../components/ui/Particles';
+import Beams from '../components/ui/Beams';
 import logoImg from '../assets/Logo - Document AI.png';
 import './Login.css';
 
 export default function Login() {
     const { signInWithGoogle, authError, session, loading } = useAuth();
+    const isDark = useSelector((state) => state.theme.isDark);
     const pageRef = useRef(null);
     const navigate = useNavigate();
 
@@ -40,10 +44,36 @@ export default function Login() {
 
     return (
         <div ref={pageRef} className="login-page">
-            {/* Background elements handled by global CSS */}
+            {/* Animated Backgrounds */}
+            {isDark ? (
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0, pointerEvents: 'none' }}>
+                    <Beams
+                        beamWidth={3}
+                        beamHeight={30}
+                        beamNumber={20}
+                        lightColor="#fb923c"
+                        speed={2}
+                        noiseIntensity={1.75}
+                        scale={0.2}
+                        rotation={30}
+                    />
+                </div>
+            ) : (
+                <Particles
+                    particleColors={['#fb923c', '#fdba74', '#f97316']}
+                    particleCount={500}
+                    particleSpread={10}
+                    speed={0.1}
+                    particleBaseSize={100}
+                    moveParticlesOnHover={true}
+                    alphaParticles={true}
+                    disableRotation={false}
+                    pixelRatio={window.devicePixelRatio || 1}
+                />
+            )}
 
             <div className="login-container">
-                <div className="login-card liquid-glass-card">
+                <div className="login-card liquid-glass-card frosted">
                     <div className="login-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <div className="login-logo-container" style={{ marginBottom: 'var(--space-3)' }}>
                             <img src={logoImg} alt="LexDoc AI Logo" style={{ height: '64px', width: 'auto', objectFit: 'contain' }} />
@@ -58,7 +88,7 @@ export default function Login() {
                     <div className="login-body">
                         {/* Google OAuth Only */}
                         <button
-                            className="google-btn liquid-glass-btn"
+                            className="google-btn"
                             onClick={signInWithGoogle}
                             data-hoverable
                         >

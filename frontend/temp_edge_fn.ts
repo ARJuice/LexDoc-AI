@@ -7,8 +7,8 @@ const corsHeaders = {
   "Content-Type": "application/json",
 };
 
-const LLAMAPARSE_API_KEY = "llx-KMxlRSWs4XetS4NSiDiwoTS2mrIV7KmDbLoBLq3VgMcdgKE7";
-const OCRSPACE_API_KEY = "K83085731988957";
+const LLAMAPARSE_API_KEY = Deno.env.get("LLAMAPARSE_API_KEY") || "";
+const OCRSPACE_API_KEY = Deno.env.get("OCRSPACE_API_KEY") || "";
 
 const MODELS = [
   "arcee-ai/trinity-large-preview:free",
@@ -264,10 +264,7 @@ Deno.serve(async (req: Request) => {
     const force_regenerate = body?.force_regenerate || false;
     if (!doc_id) return new Response(JSON.stringify({ error: "doc_id is required" }), { status: 400, headers: corsHeaders });
 
-    let OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
-    if (!OPENROUTER_API_KEY) {
-      OPENROUTER_API_KEY = "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";
-    }
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -309,7 +306,7 @@ Deno.serve(async (req: Request) => {
           documentText = await extractViaLlamaParse(blob, fileName);
           break;
         case "image":
-          documentText = \`Title: \${doc.title}. Image file.\`;
+          documentText = `Title: ${doc.title}. Image file.`;
           break;
         default:
           documentText = await blob.text();
@@ -320,7 +317,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!documentText || documentText.trim().length < 30) {
-      documentText = \`Title: \${doc.title}. Could not extract text. Summarize based on title.\`;
+      documentText = `Title: ${doc.title}. Could not extract text. Summarize based on title.`;
     }
     if (documentText.length > MAX_INPUT_CHARS) {
       documentText = documentText.slice(0, MAX_INPUT_CHARS) + "\\n[Truncated]";
@@ -331,7 +328,7 @@ Deno.serve(async (req: Request) => {
     let summaryResult: { text: string; model: string } | null = null;
     const summaryMessages = [
       { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: \`Summarize this document:\\n\\n\${documentText}\` },
+      { role: "user", content: `Summarize this document:\n\n${documentText}` },
     ];
     for (let i = 0; i < MODELS.length; i++) {
       const result = await callModel(OPENROUTER_API_KEY, MODELS[i], summaryMessages, 500, 0.3);
@@ -353,7 +350,7 @@ Deno.serve(async (req: Request) => {
       const eventPrompt = getEventExtractionPrompt(todayIST);
       const eventMessages = [
         { role: "system", content: eventPrompt },
-        { role: "user", content: \`Extract events from this document:\\n\\n\${documentText}\` },
+        { role: "user", content: `Extract events from this document:\n\n${documentText}` },
       ];
       
       let evResult: { text: string; model: string; error?: string } | null = null;
@@ -373,8 +370,8 @@ Deno.serve(async (req: Request) => {
         console.log(`[EVENTS] No model returned event data`);
       } else {
         let raw = evResult.text;
-        if (raw.includes("\`\`\`")) {
-          raw = raw.replace(/\`\`\`json\\s*/gi, "").replace(/\`\`\`\\s*/g, "").trim();
+        if (raw.includes("```")) {
+          raw = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
         }
         console.log(`[EVENTS] Cleaned response: ${raw.substring(0, 500)}`);
 
