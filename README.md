@@ -44,19 +44,64 @@ LexDoc AI is an AI-powered document management platform built for Sahrdaya CET. 
 ## Architecture
 
 ```
-React 19 + Vite
-  └── Redux (theme, sidebar, notifications)
-  └── React Router v7 (protected routes)
-  └── Supabase JS SDK
-        ├── PostgreSQL (3NF schema, RLS on all tables)
-        ├── Supabase Auth (Google OAuth / JWT)
-        ├── Supabase Storage (document buckets)
-        └── Edge Functions (Deno)
-              ├── generate-summary  →  OpenRouter API
-              └── parse-docx        →  mammoth + cheerio
+╔══════════════════════════════════════════════════════════════════════╗
+║                        BROWSER  —  React 19 + Vite                  ║
+╠══════════════════════════════════════════════════════════════════════╣
+║                                                                      ║
+║   PAGES                          COMPONENTS                          ║
+║   ├── /login          ◄──────►   ├── Beams / Particles  (WebGL/OGL) ║
+║   ├── /dashboard                 ├── Sidebar            (GSAP)      ║
+║   ├── /documents[/:id]           ├── TopBar + Search                ║
+║   ├── /upload                    ├── NotificationPanel              ║
+║   ├── /insights   (Calendar)     ├── CustomCursor       (GSAP)      ║
+║   ├── /profile                   └── ThemeToggle                    ║
+║   └── /admin/*                                                       ║
+║                                                                      ║
+║   STATE                          ROUTING                             ║
+║   Redux Toolkit                  React Router v7                     ║
+║   ├── theme slice                ├── ProtectedRoute                  ║
+║   ├── sidebar slice              └── AppLayout (outlet)             ║
+║   └── notifications slice                                            ║
+║                                                                      ║
+╠══════════════════════════════════════════════════════════════════════╣
+║                   Supabase JS SDK  (client layer)                    ║
+╠══════════════════════════════════════════════════════════════════════╣
+║                                                                      ║
+║  ┌─────────────────┐  ┌──────────────────┐  ┌────────────────────┐  ║
+║  │   PostgreSQL     │  │  Supabase Auth   │  │ Supabase Storage   │  ║
+║  │                  │  │                  │  │                    │  ║
+║  │  3NF schema      │  │  Google OAuth    │  │  Document buckets  │  ║
+║  │  RLS all tables  │  │  @sahrdaya.ac.in │  │  PDF / DOCX files  │  ║
+║  │  Triggers        │  │  JWT sessions    │  │                    │  ║
+║  │  pg_cron jobs    │  │                  │  │                    │  ║
+║  └─────────────────┘  └──────────────────┘  └────────────────────┘  ║
+║                                                                      ║
+║  ┌───────────────────────────────────────────────────────────────┐   ║
+║  │                  Edge Functions  (Deno runtime)               │   ║
+║  │                                                               │   ║
+║  │  generate-summary                   parse-docx               │   ║
+║  │  ├── check ai_cache                 ├── mammoth  (DOCX→HTML) │   ║
+║  │  ├── download from Storage          └── cheerio (structure)  │   ║
+║  │  ├── extract text                                             │   ║
+║  │  ├── run model chain (45s timeout)                            │   ║
+║  │  └── upsert ai_cache + summaries                             │   ║
+║  └───────────────────────────────────────────────────────────────┘   ║
+║                                                                      ║
+╠══════════════════════════════════════════════════════════════════════╣
+║                      EXTERNAL SERVICES                               ║
+╠══════════════════════════════════════════════════════════════════════╣
+║                                                                      ║
+║  OpenRouter  (AI model chain)        Document Parsing                ║
+║  ├── arcee-ai/trinity-large  [1]     ├── LlamaParse API  (primary)   ║
+║  ├── gemini-2.0-flash        [2]     └── OCR.space API   (fallback)  ║
+║  ├── llama-3.3-70b           [3]                                     ║
+║  └── deepseek-chat           [4]     Google OAuth                    ║
+║                                      └── identity + email domain     ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
 ```
 
-**AI Summarization flow:** Upload → Storage → Edge Function checks `ai_cache` → LlamaParse/OCR extract text → sequential model chain (Arcee → Gemini 2.0 Flash → LLaMA 3.3 → DeepSeek) with 45s `AbortController` timeout → UPSERT `ai_cache` + `summaries` → update `processing_status`.
+**Document summarization flow:** Upload → Supabase Storage → `generate-summary` Edge Function → check `ai_cache` (return if hit) → extract text via LlamaParse or OCR.space → sequential model chain with 45s `AbortController` timeout per model → UPSERT `ai_cache` + `summaries` → `processing_status = 'summarized'`.
 
 ## Database Schema (3NF)
 
