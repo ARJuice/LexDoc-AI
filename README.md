@@ -1,27 +1,18 @@
 <p align="center">
-  <img src="docs/banner.jpg" alt="LexDoc AI Banner" width="100%" />
+  <img src="docs/logo.png" alt="LexDoc AI Logo" width="120" />
 </p>
 
 <h1 align="center">LexDoc AI</h1>
 
 <p align="center">
-  <strong>Intelligent Multi-Modal College Document Management System</strong>
+  <strong>Intelligent Multi-Modal Document Management System</strong><br/>
+  <sub>Built for Sahrdaya College of Engineering and Technology</sub>
 </p>
 
 <p align="center">
-  <a href="https://github.com/ARJuice/LexDoc-AI/commits/main">
-    <img src="https://img.shields.io/github/last-commit/ARJuice/LexDoc-AI?style=for-the-badge&color=7C3AED&labelColor=0d1117" alt="Last Commit" />
-  </a>
-  <a href="https://github.com/ARJuice/LexDoc-AI/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/ARJuice/LexDoc-AI?style=for-the-badge&color=06B6D4&labelColor=0d1117" alt="License" />
-  </a>
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=61DAFB&labelColor=0d1117" alt="React 19" />
   <img src="https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=646CFF&labelColor=0d1117" alt="Vite" />
   <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=3ECF8E&labelColor=0d1117" alt="Supabase" />
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Status-Active%20Development-22C55E?style=for-the-badge&labelColor=0d1117" alt="Status" />
   <img src="https://img.shields.io/badge/OpenRouter-AI%20Powered-FF6B35?style=for-the-badge&labelColor=0d1117" alt="OpenRouter" />
   <img src="https://img.shields.io/badge/GSAP-Animations-88CE02?style=for-the-badge&logo=greensock&logoColor=88CE02&labelColor=0d1117" alt="GSAP" />
 </p>
@@ -30,11 +21,11 @@
 
 ## 🧠 What is LexDoc AI?
 
-**LexDoc AI** is a production-grade, AI-powered document management platform built for college institutions. It's not just a file storage tool — it's an **organizational knowledge platform** that transforms raw institutional documents into structured, searchable, AI-summarized intelligence.
+**LexDoc AI** is a production-grade, AI-powered document management platform built for Sahrdaya College of Engineering and Technology. It's not just a file storage tool — it's an **organizational knowledge platform** that transforms raw institutional documents into structured, searchable, AI-summarized intelligence.
 
 > Built as a college PBL (Project-Based Learning) project, but engineered to production standards.
 
-The system allows students, teachers, HODs, and admins to **upload, access, and understand** documents through AI-generated summaries, smart tagging, and a beautiful glassmorphism UI — all secured by database-level access control.
+Students, teachers, HODs, and admins can **upload, access, and understand** documents through AI-generated summaries, smart tagging, and a premium glassmorphism UI — all enforced by database-level access control. Authentication is restricted to `@sahrdaya.ac.in` institutional emails.
 
 ---
 
@@ -45,10 +36,10 @@ The system allows students, teachers, HODs, and admins to **upload, access, and 
 <td width="50%">
 
 ### 🔐 Hybrid Authentication
-- Google OAuth for institutional email verification
-- Username/Password secondary layer
-- Supabase-enforced email domain restrictions
+- Google OAuth restricted to `@sahrdaya.ac.in` domain
+- Supabase JWT session management
 - Role-based access: Admin → HOD → Teacher → Student
+- Account setup flow for new institutional users
 
 </td>
 <td width="50%">
@@ -56,8 +47,8 @@ The system allows students, teachers, HODs, and admins to **upload, access, and 
 ### 🤖 AI Document Intelligence
 - LlamaParse + OCR.space for multi-modal text extraction
 - OpenRouter-powered summarization with 4-model fallback chain
-- Auto event parsing (deadlines, schedules) via Gemini 2.0 Flash
-- AI-generated summaries cached server-side
+- Auto event/deadline parsing via Gemini 2.0 Flash
+- AI summaries cached server-side via `ai_cache` table
 
 </td>
 </tr>
@@ -65,19 +56,19 @@ The system allows students, teachers, HODs, and admins to **upload, access, and 
 <td width="50%">
 
 ### 🏛️ Database-Layer Security
-- PostgreSQL Row Level Security (RLS) policies
+- PostgreSQL Row Level Security (RLS) on every table
 - 3NF-normalized schema with junction tables
-- DB-level audit triggers (bypassing frontend entirely)
+- DB-level audit triggers — bypass-proof audit trail
 - Automated document expiry via `pg_cron`
 
 </td>
 <td width="50%">
 
-### 🎨 Liquid Glass UI
-- Custom cursor system with magnetic effects
-- GSAP-powered micro-animations and page transitions
-- Lenis smooth scroll integration
-- Full dark/light theme with CSS variables
+### 🎨 Premium Liquid Glass UI
+- WebGL animated beams (OGL) + particle systems on login
+- GSAP-powered staggered page animations and transitions
+- Custom PNG cursor with magnetic hover via GSAP `quickTo`
+- Lenis smooth scroll with full dark/light theme support
 
 </td>
 </tr>
@@ -91,10 +82,10 @@ The system allows students, teachers, HODs, and admins to **upload, access, and 
 ┌─────────────────────────────────────────────────────────────────┐
 │                         FRONTEND (React 19 + Vite)              │
 │  ┌─────────┐  ┌──────────┐  ┌─────────┐  ┌──────────────────┐ │
-│  │Dashboard│  │Documents │  │  Upload  │  │   AI Insights    │ │
+│  │Dashboard│  │Documents │  │  Upload  │  │  AI Calendar     │ │
 │  └─────────┘  └──────────┘  └─────────┘  └──────────────────┘ │
 │  ┌─────────────────────────────────────────────────────────┐    │
-│  │  Redux Store  │  React Router v7  │  Supabase JS SDK    │    │
+│  │  Redux Toolkit  │  React Router v7  │  Supabase JS SDK  │    │
 │  └─────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────┘
                               │
@@ -143,10 +134,10 @@ Invoke Edge Function: generate-summary
 Extract Text
     ├── .docx → parse-docx Edge Fn (mammoth + cheerio)
     ├── .pdf  → LlamaParse API
-    └── Fallback → OCR.space API
+    └── Fallback → OCR.space API (for scanned/image PDFs)
     │
     ▼
-AI Summarization (Sequential Fallback Chain)
+AI Summarization (Sequential Fallback Chain, 45s timeout each)
     ├── 1. arcee-ai/trinity-large-preview:free  (Primary)
     ├── 2. google/gemini-2.0-flash:free          (Fallback 1)
     ├── 3. meta-llama/llama-3.3-70b:free        (Fallback 2)
@@ -154,15 +145,13 @@ AI Summarization (Sequential Fallback Chain)
     │
     ▼
 UPSERT into ai_cache + summaries table
-    │
-    ▼
 UPDATE documents.processing_status = 'summarized'
     │
     ▼
-Display to User in Real-Time
+Display to User — Live processing states in Upload UI
 ```
 
-Each AI call has a **45-second AbortController timeout** to prevent runaway edge function billing.
+Each model call is wrapped with an `AbortController` at 45 seconds to prevent runaway edge function billing.
 
 ---
 
@@ -177,8 +166,8 @@ roles          → id, name, access_level
 users          → id, google_id, dept_id(FK), role_id(FK), sr_no, class, semester
 documents      → id, title, uploader_id(FK), access_level, processing_status, expiry_date
 
--- Junction Tables (2NF compliance)
-document_tags       → doc_id(FK), tag_id(FK)
+-- Junction Tables (2NF compliance — no partial dependencies)
+document_tags        → doc_id(FK), tag_id(FK)
 document_departments → doc_id(FK), dept_id(FK)
 
 -- AI & Audit
@@ -190,10 +179,10 @@ notifications  → id, user_id(FK), doc_id(FK), message, is_read
 
 ### 🔒 Security Highlights
 
-- **RLS on every table** — queries are scoped to the authenticated user's JWT context
-- **AFTER INSERT/DELETE trigger** on `documents` → auto-writes to `audit_logs` (bypasses any frontend manipulation)
-- **`pg_cron`** runs hourly to sweep expired documents
-- **Notification trigger** on `document_tags` → broadcasts only to users within the correct RBAC scope
+- **RLS on every table** — queries scoped to `auth.uid()` JWT context
+- **`AFTER INSERT/DELETE` trigger** on `documents` → auto-writes immutable `audit_logs` rows (cannot be bypassed from the frontend)
+- **`notify_on_urgent_document` trigger** on `document_tags` → pushes notifications only to users within the correct RBAC scope
+- **`pg_cron`** sweeps expired documents hourly; old notifications purged after 7 days
 
 ---
 
@@ -203,17 +192,18 @@ notifications  → id, user_id(FK), doc_id(FK), message, is_read
 |-------|-----------|
 | **Framework** | React 19 + Vite 7 |
 | **Routing** | React Router v7 |
-| **State** | Redux Toolkit |
-| **Styling** | Vanilla CSS (Liquid Glassmorphism) |
-| **Animations** | GSAP 3 + Lenis Smooth Scroll |
-| **3D/Visual** | Three.js + React Three Fiber + OGL |
-| **Database** | Supabase (PostgreSQL 3NF + RLS) |
-| **Auth** | Supabase Auth (Google OAuth + JWT) |
-| **Storage** | Supabase Storage Buckets |
-| **Edge Functions** | Deno (TypeScript) on Supabase |
-| **AI Orchestration** | OpenRouter API (4-model fallback) |
+| **State Management** | Redux Toolkit |
+| **Styling** | Vanilla CSS (Liquid Glassmorphism design system) |
+| **Animations** | GSAP 3 (`gsap.quickTo`, staggered reveals, page transitions) |
+| **Smooth Scroll** | Lenis (`@studio-freight/lenis`) |
+| **3D / WebGL** | Three.js + React Three Fiber + OGL (login background) |
+| **Database** | Supabase PostgreSQL (3NF + RLS) |
+| **Authentication** | Supabase Auth (Google OAuth + JWT) |
+| **File Storage** | Supabase Storage Buckets |
+| **Edge Functions** | Deno runtime on Supabase |
+| **AI Orchestration** | OpenRouter API (4-model fallback chain) |
 | **Document Parsing** | LlamaParse API + OCR.space |
-| **Word Parsing** | mammoth.js + cheerio |
+| **Word Docs** | mammoth.js + cheerio (via Edge Function) |
 | **Icons** | Lucide React |
 
 ---
@@ -226,28 +216,29 @@ LexDoc-AI/
 │   ├── 📂 src/
 │   │   ├── 📂 components/
 │   │   │   ├── 📂 auth/        # ProtectedRoute
-│   │   │   ├── 📂 layout/      # AppLayout, Sidebar, Topbar
-│   │   │   └── 📂 ui/          # CustomCursor, SmoothScroll, shared components
-│   │   ├── 📂 context/         # AuthContext
-│   │   ├── 📂 lib/             # Supabase client
-│   │   ├── 📂 pages/           # All route-level page components
-│   │   │   ├── Dashboard       # Overview, recent docs, stats
-│   │   │   ├── Documents       # Browse, filter, search all docs
-│   │   │   ├── DocumentDetail  # Split-screen: PDF viewer + AI panel
-│   │   │   ├── Upload          # Drag-and-drop with live AI processing
-│   │   │   ├── AIInsights      # Calendar view, events, summaries
-│   │   │   ├── Profile         # User profile editing
+│   │   │   ├── 📂 layout/      # AppLayout, Sidebar (GSAP collapse), TopBar
+│   │   │   └── 📂 ui/          # CustomCursor, SmoothScroll, Beams (WebGL),
+│   │   │                       # Particles, NotificationPanel, ThemeToggle
+│   │   ├── 📂 context/         # AuthProvider (AuthContext + Supabase session)
+│   │   ├── 📂 lib/             # Supabase client + supabaseData.js (all queries)
+│   │   ├── 📂 pages/
+│   │   │   ├── Login           # Google OAuth + WebGL Beams/Particles background
+│   │   │   ├── Dashboard       # Live stats, recent docs, upcoming events
+│   │   │   ├── Documents       # Browse, filter, search all accessible docs
+│   │   │   ├── DocumentDetail  # Split: PDF/DOCX viewer + AI summary panel
+│   │   │   ├── Upload          # Drag-and-drop + live AI processing states
+│   │   │   ├── AIInsights      # Calendar view with event/deadline overlays
+│   │   │   ├── Profile         # Editable user profile
 │   │   │   ├── MyUploads       # Personal document management
-│   │   │   └── Admin/          # Users, Departments, Audit Logs
-│   │   ├── 📂 store/           # Redux store + theme slice
-│   │   └── 📂 utils/           # Helper functions
-│   └── 📄 .env.example         # Environment variable template
+│   │   │   └── Admin/          # Users, Departments, Audit Logs (admin only)
+│   │   ├── 📂 store/           # Redux store (theme + sidebar + notifications)
+│   │   └── 📂 assets/          # Logo, cursor PNGs
+│   └── 📄 .env.example
 ├── 📂 RELEVANT DOCS/           # Architecture, DB schema, project diary
-│   ├── Database_Architecture.md
-│   ├── Supabase_Database_Schema.md
-│   └── LexDoc_AI_Project_Diary.md
-├── 📂 SKILLS/                  # Agent skills (DB design, frontend)
-├── 📂 docs/                    # Repository assets (banner, screenshots)
+├── 📂 .agents/skills/          # Antigravity AI skill system
+│   ├── intelligent-routing/    # Routes tasks to correct skill
+│   ├── skill_db/               # DB design & RLS patterns
+│   └── frontend-design/        # Glassmorphism UI guidelines
 └── 📄 README.md
 ```
 
@@ -259,10 +250,10 @@ LexDoc-AI/
 
 - Node.js 18+
 - A [Supabase](https://supabase.com) project with:
-  - Auth configured (Google OAuth provider enabled)
+  - Google OAuth provider configured
   - Storage buckets created
-  - Edge Functions deployed (see `frontend/temp_edge_fn.ts`)
-  - Database schema applied (see `RELEVANT DOCS/Supabase_Database_Schema.md`)
+  - Database schema applied (see [`RELEVANT DOCS/Supabase_Database_Schema.md`](RELEVANT%20DOCS/Supabase_Database_Schema.md))
+  - Edge Functions deployed (source in `frontend/temp_edge_fn.ts`)
 
 ### Installation
 
@@ -276,7 +267,7 @@ npm install
 
 # 3. Configure environment
 cp .env.example .env
-# Edit .env with your Supabase project credentials:
+# Edit .env:
 # VITE_SUPABASE_URL=https://your-project.supabase.co
 # VITE_SUPABASE_ANON_KEY=your-anon-key
 
@@ -286,20 +277,22 @@ npm run dev
 
 ### Database Setup
 
-1. Go to your **Supabase Dashboard → SQL Editor**
-2. Run the complete schema from [`RELEVANT DOCS/Supabase_Database_Schema.md`](RELEVANT%20DOCS/Supabase_Database_Schema.md)
-3. Run the triggers, procedures, and `pg_cron` jobs from [`RELEVANT DOCS/Database_Architecture.md`](RELEVANT%20DOCS/Database_Architecture.md)
-4. Promote your admin user via SQL:
+1. Open **Supabase Dashboard → SQL Editor**
+2. Run the schema from [`RELEVANT DOCS/Supabase_Database_Schema.md`](RELEVANT%20DOCS/Supabase_Database_Schema.md)
+3. Run triggers and `pg_cron` jobs from [`RELEVANT DOCS/Database_Architecture.md`](RELEVANT%20DOCS/Database_Architecture.md)
+4. Promote your admin user:
    ```sql
-   UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'admin') 
+   UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'admin')
    WHERE google_id = 'your-google-uid';
    ```
 
-### Production Build
+### Edge Function Secrets
 
-```bash
-npm run build
-# Outputs optimized bundle to frontend/dist/
+Set these in the Supabase Dashboard under **Edge Functions → Secrets**:
+```
+OPENROUTER_API_KEY=
+LLAMAPARSE_API_KEY=
+OCR_SPACE_API_KEY=
 ```
 
 ---
@@ -308,14 +301,14 @@ npm run build
 
 | Route | Page | Access |
 |-------|------|--------|
-| `/login` | Login with Google OAuth | Public |
-| `/dashboard` | Overview, stats, recent docs | All users |
-| `/documents` | Browse & search all accessible docs | All users |
-| `/documents/:id` | Document detail — PDF viewer + AI summary | All users |
-| `/upload` | Drag-and-drop upload with AI processing | Authenticated |
-| `/my-uploads` | Personal upload management | Authenticated |
-| `/insights` | AI calendar, events, document intelligence | Authenticated |
-| `/profile` | View & edit user profile | Authenticated |
+| `/login` | Google OAuth with WebGL background | Public |
+| `/dashboard` | Stats, recent docs, upcoming events | All users |
+| `/documents` | Browse, filter, and search accessible docs | All users |
+| `/documents/:id` | Document viewer + AI summary panel | All users |
+| `/upload` | Drag-and-drop upload + live AI processing | Authenticated |
+| `/my-uploads` | Personal document management | Authenticated |
+| `/insights` | AI calendar with event/deadline overlays | Authenticated |
+| `/profile` | Editable user profile | Authenticated |
 | `/admin/users` | User management & role assignment | Admin only |
 | `/admin/departments` | Department CRUD | Admin only |
 | `/admin/audit` | Immutable audit log viewer | Admin only |
@@ -325,52 +318,30 @@ npm run build
 ## 🏛️ Role-Based Access Control
 
 ```
-Admin
+Admin (access_level ≥ 10)
   └── Full access: all docs, all departments, admin panel, audit logs
-      │
-HOD (Head of Department)
-  └── All documents within their department + inter-department shared docs
-      │
-Teacher
-  └── Department documents + ability to upload course material
-      │
-Student
-  └── Department documents visible to their class/semester
+
+HOD / Teacher (access_level ≥ 5)
+  └── Department documents + ability to tag uploads as PRIORITY
+      Upload course material visible department-wide
+
+Student (access_level < 5)
+  └── Department documents scoped to their class/semester
+      Read-only PRIORITY tag visibility (cannot assign)
 ```
 
-All access is enforced at the **PostgreSQL RLS layer** — the frontend UI simply reflects what the database already restricts.
-
----
-
-## 🧪 Development Notes
-
-- **AI Summarization** requires OpenRouter API key and LlamaParse API key configured as Supabase Edge Function secrets
-- **Edge Functions** are in `frontend/temp_edge_fn.ts` (deploy via `supabase functions deploy`)
-- **Theme persistence** is stored in `localStorage` under key `lexdoc-theme`
-- **Custom cursor** uses GSAP for smooth magnetic follow animations; disabled on touch devices automatically
-- **N+1 queries** were resolved using Supabase's native relational queries with embedded selects
-
----
-
-## 🗺️ Roadmap
-
-- [ ] Real-time notifications via Supabase Realtime channels
-- [ ] Multi-modal document support (scanned image PDFs via full OCR pipeline)
-- [ ] Natural language search across all document summaries
-- [ ] Mobile-responsive layout optimization
-- [ ] Automated deadline extraction → calendar event integration
-- [ ] Email notifications for urgent/deadline-tagged documents
+All access is enforced at the **PostgreSQL RLS layer** — the frontend UI reflects what the database already restricts.
 
 ---
 
 ## 🎓 Academic Context
 
-This project was built as part of a **Project-Based Learning (PBL)** course, aligned with:
+Built for **Sahrdaya College of Engineering and Technology** as a PBL project, aligned with:
 
 | SDG | Alignment |
 |-----|-----------|
-| **SDG 4 — Quality Education** | Digitizes and democratizes access to educational and departmental resources within an institution |
-| **SDG 9 — Industry, Innovation & Infrastructure** | Builds modern AI-integrated digital infrastructure for secure document management |
+| **SDG 4 — Quality Education** | Democratizes access to educational and departmental resources within the institution |
+| **SDG 9 — Industry, Innovation & Infrastructure** | Builds AI-integrated digital infrastructure for secure institutional document management |
 
 ---
 
@@ -381,7 +352,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ---
 
 <p align="center">
-  <strong>Built with ❤️ by <a href="https://github.com/ARJuice">Arjun</a></strong>
-  <br/>
-  <sub>React 19 · Supabase · OpenRouter · GSAP · LlamaParse</sub>
+  <strong>Built with ❤️ by <a href="https://github.com/ARJuice">Arjun</a></strong><br/>
+  <sub>React 19 · Supabase · OpenRouter · GSAP · LlamaParse · Sahrdaya CET</sub>
 </p>
