@@ -38,4 +38,5 @@ token.json
 # Stray diff / temp files
 diff.txt
 temp_*.ts
+!temp_edge_fn.ts
 temp_*.js

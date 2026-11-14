@@ -35,13 +35,20 @@ Thumbs.db
 *.tmp
 *.temp
 diff.txt
-temp_*.ts
 temp_*.js
 
 # Supabase CLI
 supabase/.temp/
 
-# Internal scratch / agent files (not for public repo)
+# AI Agent & Assistant configuration
+AGENTS.md
+.agents/
+SKILLS/
+.mcp.json
+.claude/
+.gemini/
+
+# Internal scratch / notes
 RELEVANT DOCS/AGENTS.md
 RELEVANT DOCS/LexDoc_AI_Project_Diary.md
 RELEVANT DOCS/Rough Concept.txt
