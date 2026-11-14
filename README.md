@@ -21,18 +21,6 @@ LexDoc AI is a full-stack document management platform built for institutional u
 
 Authentication is scoped to `@sahrdaya.ac.in` institutional email addresses via Google OAuth.
 
-## Table of Contents
-
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Project Structure](#project-structure)
-- [Database Schema](#database-schema)
-- [Application Routes](#application-routes)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Edge Functions](#edge-functions)
-- [License](#license)
-
 ## Tech Stack
 
 | Layer | Technology |
@@ -115,31 +103,7 @@ Authentication is scoped to `@sahrdaya.ac.in` institutional email addresses via 
 
 **Security model:** Every table has RLS enabled. Policies evaluate `auth.uid()` from the JWT at query time — the frontend never makes an access decision; the database does. An `AFTER INSERT OR DELETE` trigger on `documents` writes audit log entries with `SECURITY DEFINER`, making them un-bypassable from the client.
 
-## Project Structure
-
-```
-LexDoc-AI/
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── auth/          # ProtectedRoute, auth guards
-│   │   │   ├── layout/        # AppLayout, Sidebar, TopBar
-│   │   │   └── ui/            # CustomCursor, SmoothScroll, ThemeToggle
-│   │   ├── pages/             # Route-level components (Dashboard, Documents, …)
-│   │   ├── store/             # Redux slices (theme, sidebar, notifications)
-│   │   ├── lib/               # Supabase client
-│   │   ├── utils/             # Shared helpers
-│   │   └── index.css          # Global design system & CSS custom properties
-│   ├── temp_edge_fn.ts        # Edge Function source (deploy via Supabase CLI)
-│   └── package.json
-├── RELEVANT DOCS/
-│   ├── Database_Architecture.md   # RLS policies, triggers, pg_cron jobs
-│   └── Supabase_Database_Schema.md # Full DDL + indexes
-└── docs/
-    └── logo.png
-```
-
-## Database Schema
+## Database Schema (3NF)
 
 ```
 departments          → id, name, code
@@ -158,7 +122,7 @@ audit_logs           → id, user_id(FK), doc_id, action, details, timestamp
 
 Automated maintenance via `pg_cron`: expired documents swept hourly, stale notifications purged after 7 days. See [`RELEVANT DOCS/Database_Architecture.md`](RELEVANT%20DOCS/Database_Architecture.md) for the full trigger and RLS SQL.
 
-## Application Routes
+## Pages
 
 | Route | Description | Access |
 |---|---|---|
@@ -180,48 +144,14 @@ Automated maintenance via `pg_cron`: expired documents swept hourly, stale notif
 git clone https://github.com/ARJuice/LexDoc-AI.git
 cd LexDoc-AI/frontend
 npm install
-cp .env.example .env
-# Fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+cp .env.example .env   # add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
 npm run dev
 ```
 
-**Database setup** — Run the DDL from [`RELEVANT DOCS/Supabase_Database_Schema.md`](RELEVANT%20DOCS/Supabase_Database_Schema.md) in the Supabase SQL editor, then apply the triggers, RLS policies, and `pg_cron` jobs from [`RELEVANT DOCS/Database_Architecture.md`](RELEVANT%20DOCS/Database_Architecture.md).
+Apply the schema from [`RELEVANT DOCS/Supabase_Database_Schema.md`](RELEVANT%20DOCS/Supabase_Database_Schema.md) in the Supabase SQL editor, then run the triggers and `pg_cron` jobs from [`RELEVANT DOCS/Database_Architecture.md`](RELEVANT%20DOCS/Database_Architecture.md).
 
-**Seed roles and departments** — Insert the four roles (`Admin`, `HOD`, `Teacher`, `Student` with access levels `10`, `7`, `5`, `1`) and department rows before creating the first user.
-
-## Environment Variables
-
-**Frontend** (`frontend/.env`):
-
-```env
-VITE_SUPABASE_URL=https://<project-ref>.supabase.co
-VITE_SUPABASE_ANON_KEY=<anon-key>
-```
-
-**Edge Function secrets** (set via Supabase Dashboard → Settings → Edge Functions):
-
-```
-OPENROUTER_API_KEY
-LLAMAPARSE_API_KEY
-OCR_SPACE_API_KEY
-```
-
-## Edge Functions
-
-Both functions live in `frontend/temp_edge_fn.ts` and are deployed to Supabase:
-
-| Function | Trigger | Description |
-|---|---|---|
-| `generate-summary` | Explicit client call | Downloads file from Storage, extracts text, runs OpenRouter model chain, upserts `ai_cache` |
-| `parse-docx` | Called by `generate-summary` | Converts DOCX binary → structured HTML sections using `mammoth` + `cheerio` |
-
-Deploy with the [Supabase CLI](https://supabase.com/docs/guides/cli):
-
-```bash
-supabase functions deploy generate-summary
-supabase functions deploy parse-docx
-```
+Set Edge Function secrets in the Supabase Dashboard: `OPENROUTER_API_KEY`, `LLAMAPARSE_API_KEY`, `OCR_SPACE_API_KEY`.
 
 ## License
 
-[MIT](LICENSE)
+MIT — see [LICENSE](LICENSE).
