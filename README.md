@@ -21,6 +21,8 @@ LexDoc AI is a full-stack document management platform built for institutional u
 
 **Role-Based Access** — Admin → HOD/Teacher → Student hierarchy. RLS policies on every table enforce visibility at the database level — the frontend only reflects what the DB already restricts.
 
+**Secure API Orchestration** — Zero client-side API secret exposure. All third-party AI and document extraction requests are orchestrated server-side via Supabase Edge Functions (Deno). The backend manages a multi-provider fallback pipeline with automated failover, per-request `AbortController` timeouts, and PostgreSQL response caching (`ai_cache`) to prevent redundant external API calls and token waste.
+
 **Premium UI** — Liquid glassmorphism design system with GSAP staggered animations, a custom PNG cursor with `quickTo` magnetic tracking, Lenis smooth scroll, and WebGL animated beams on the login page (OGL).
 
 **Document Pipeline** — Upload → Supabase Storage → `generate-summary` Edge Function → LlamaParse / OCR.space text extraction → 4-model OpenRouter fallback chain → cached in `ai_cache`, events extracted into the calendar.
@@ -93,6 +95,13 @@ LexDoc AI is a full-stack document management platform built for institutional u
 ║                                      └── identity + email domain     ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ```
+
+### Secure API Orchestration & Processing Flow
+
+- **Zero Client-Side Secret Exposure** — Sensitive API credentials (`OPENROUTER_API_KEY`, `LLAMAPARSE_API_KEY`, `OCR_SPACE_API_KEY`) reside exclusively in encrypted Supabase Edge Function secrets. No external API keys are bundled into the browser bundle or exposed over client networks.
+- **Resilient Multi-Provider Failover** — Edge Functions manage a sequential fallback chain across four LLM providers (Arcee → Gemini 2.0 Flash → LLaMA 3.3 70B → DeepSeek Chat). Each upstream request is wrapped in an `AbortController` timeout (45s) to prevent stalled connections and runaway execution.
+- **Idempotent Caching** — Documents are verified against the `ai_cache` table before invoking external extraction pipelines, eliminating redundant API token spend and network latency on repeated requests.
+- **Transactional State Management** — Processing states (`uploading` → `parsing` → `summarizing` → `summarized`) update in real time with automated audit logging and role-scoped notifications handled via PostgreSQL triggers.
 
 ## Database Schema (3NF)
 
