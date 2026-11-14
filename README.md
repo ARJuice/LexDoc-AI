@@ -99,7 +99,7 @@ LexDoc AI is a full-stack document management platform built for institutional u
 ### Secure API Orchestration & Processing Flow
 
 - **Zero Client-Side Secret Exposure** — Sensitive API credentials (`OPENROUTER_API_KEY`, `LLAMAPARSE_API_KEY`, `OCR_SPACE_API_KEY`) reside exclusively in encrypted Supabase Edge Function secrets. No external API keys are bundled into the browser bundle or exposed over client networks.
-- **Resilient Multi-Provider Failover** — Edge Functions manage a sequential fallback chain across four LLM providers (Arcee → Gemini 2.0 Flash → LLaMA 3.3 70B → DeepSeek Chat). Each upstream request is wrapped in an `AbortController` timeout (45s) to prevent stalled connections and runaway execution.
+- **Resilient Multi-Provider Failover** — Edge Functions manage a sequential fallback chain across four LLM providers (Arcee → Gemini 2.0 Flash → LLaMA 3.3 70B → DeepSeek Chat). Each upstream request is wrapped in an `AbortController` timeout to prevent stalled connections and runaway execution.
 - **Idempotent Caching** — Documents are verified against the `ai_cache` table before invoking external extraction pipelines, eliminating redundant API token spend and network latency on repeated requests.
 - **Transactional State Management** — Processing states (`uploading` → `parsing` → `summarizing` → `summarized`) update in real time with automated audit logging and role-scoped notifications handled via PostgreSQL triggers.
 
