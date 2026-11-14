@@ -40,3 +40,9 @@ temp_*.js
 
 # Supabase CLI
 supabase/.temp/
+
+# Internal scratch / agent files (not for public repo)
+RELEVANT DOCS/AGENTS.md
+RELEVANT DOCS/LexDoc_AI_Project_Diary.md
+RELEVANT DOCS/Rough Concept.txt
+RELEVANT DOCS/UI-UX.txt

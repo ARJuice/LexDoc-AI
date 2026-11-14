@@ -34,3 +34,8 @@ dist-ssr
 # API keys and secrets
 credentials.json
 token.json
+
+# Stray diff / temp files
+diff.txt
+temp_*.ts
+temp_*.js
