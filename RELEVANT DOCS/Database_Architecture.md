@@ -1,87 +1,50 @@
-# LexDoc AI – Database Architecture & DBMS Properties
+# Database Architecture
 
-## 1. Overview
-LexDoc AI relies on a **PostgreSQL** database managed by Supabase. This document details the database's strict compliance with relational database normalization principles, its security model (Row-Level Security), and the advanced DBMS features utilized (Triggers, Stored Procedures, and Automated Jobs) to guarantee data integrity seamlessly at the database layer.
-
-## 2. Normalization & Relational Schema
-The database has been designed and strictly adhered to **Third Normal Form (3NF)** to eliminate redundancy and prevent update anomalies.
-
-### First Normal Form (1NF)
-**Rule:** All attributes must hold atomic values, and each row must be unique.
-- **Application:** Every table holds a primary key (`id`). Fields like `tags` or `departments` are not stored as comma-separated lists inside a single column. Instead, they are broken down into their individual components and structured relationally.
-
-### Second Normal Form (2NF)
-**Rule:** Must be in 1NF, and all non-key attributes must be fully functionally dependent on the primary key (no partial dependencies).
-- **Application:** The many-to-many relationships (e.g., Documents filtering by Departments, Documents having multiple Tags) use Junction Tables (`document_tags`, `document_departments`) with composite primary keys (`doc_id`, `tag_id`). Any attribute related to a document belongs *only* to the `documents` table, and perfectly depends on `documents.id`.
-
-### Third Normal Form (3NF)
-**Rule:** Must be in 2NF, and there should be no transitive dependencies (non-key attributes cannot depend on other non-key attributes).
-- **Application:** In the `users` table, we store the `dept_id` and `role_id` as foreign keys. We *do not* store `dept_name` or `role_name` directly in the `users` table. If a department's name changes, we only update the `departments` table without needing to touch a single row in the `users` table. The `users` table also distinctly captures conditionally required fields (`sr_no`, `class`, `semester`) natively without messy JSON blobs.
-
-## 3. Database Triggers & Automated Auditing
-To ensure that critical security metadata is captured reliably—regardless of whether the frontend API is bypassed—we employ **PostgreSQL Triggers** and **Stored Procedures**. 
-
-### 3.1. Automatic Timestamps (`updated_at`)
-Two triggers ensure that any `UPDATE` operation to users or documents automatically adjusts the timestamp.
-- **Trigger**: `update_users_modtime` and `update_documents_modtime`
-- **Function**: Automatically invokes `now()` on modification.
-
-### 3.2. Database-Level Audit Logging (`audit_document_changes`)
-Instead of relying on the client/frontend to manually log when a document is uploaded or deleted, an `AFTER INSERT OR DELETE` trigger executes directly on the `documents` table. 
-- It securely inspects the Supabase JWT `auth.uid()` connection context to trace exactly which Auth user initiated the action.
-- It automatically maps the Auth UUID to the internal `users.id` and executes an `INSERT INTO audit_logs`, creating an immutable, un-bypassable audit trail.
-
-## 4. Automated Document Expiry
-Documents can optionally expire. If left unspecified by the user, the application explicitly assigns a **5-month (150 days) expiration date**. 
-- To prevent database bloat, a PostgreSQL automated job (via the `pg_cron` extension) sweeps the `documents` table every hour to clean up entries where `expiry_date < NOW()`.
-
-## 5. Security Context (Row-Level Security)
-Supabase provides PostgreSQL Row-Level Security (RLS). Every query made by the frontend operates strictly within the context of the logged-in user.
-- **Data Isolation**: Students cannot query other departments' documents. The database forcibly filters `SELECT` responses based on the executing user's `current_setting('request.jwt.claims')`.
-- **RBAC Enforcement**: The database policies independently inspect the user's role hierarchy (checking if the user's `role_id` maps to an `access_level >= 10` for admin operations).
-
-## 6. Access-Aware Notification System
-Combining Triggers and RLS, the database handles broadcasting events contextually.
-- **Trigger**: `notify_on_urgent_document` executes immediately `AFTER INSERT ON document_tags`.
-- **Logic**: It inspects the `documents` accessibility (`access_level`, `dept_ids`) and pushes isolated rows to the `notifications` table *only* for the `users` mapped properly within the RBAC context. 
-- **Auto-Cleanup**: A `pg_cron` routine schedules `delete-old-notifications` periodically to expire old rows past `7 days`.
+LexDoc AI uses a PostgreSQL database managed by Supabase. This document covers the schema design rationale, the security model (Row-Level Security), and the server-side automation built with PostgreSQL triggers and `pg_cron`.
 
 ---
 
-## 7. Required SQL Setup (Execute in Supabase SQL Editor)
+## Normalization
 
-To implement the sophisticated triggers and automated jobs described in this architecture, execute the following SQL in your Supabase Dashboard's SQL Editor:
+The schema follows **Third Normal Form (3NF)** throughout.
+
+**1NF** — Every table has a primary key; no multi-valued columns. Tags and department associations are stored in dedicated junction tables (`document_tags`, `document_departments`), not as comma-separated strings.
+
+**2NF** — Many-to-many relationships use composite-primary-key junction tables. Document metadata belongs exclusively to `documents.id` with no partial dependencies.
+
+**3NF** — The `users` table stores `dept_id` and `role_id` as foreign keys, never denormalized department or role names. Renaming a department requires a single row update in `departments` with no cascading edits elsewhere.
+
+---
+
+## Triggers
+
+### Automatic `updated_at` timestamps
 
 ```sql
--- ==========================================
--- 1. Automating Timestamps
--- ==========================================
-ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-ALTER TABLE documents ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-
 CREATE OR REPLACE FUNCTION update_modified_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = now();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE 'plpgsql';
 
 DROP TRIGGER IF EXISTS update_users_modtime ON users;
 CREATE TRIGGER update_users_modtime
 BEFORE UPDATE ON users
-FOR EACH ROW
-EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_modified_column();
 
 DROP TRIGGER IF EXISTS update_documents_modtime ON documents;
 CREATE TRIGGER update_documents_modtime
 BEFORE UPDATE ON documents
-FOR EACH ROW
-EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+```
 
--- ==========================================
--- 2. Database-Level Audit Logging
--- ==========================================
+### Audit logging
+
+An `AFTER INSERT OR DELETE` trigger on `documents` writes to `audit_logs` using `SECURITY DEFINER`. It reads the authenticated user's UUID from Supabase's `auth.uid()` context — this fires inside PostgreSQL, so it cannot be bypassed by the client.
+
+```sql
 CREATE OR REPLACE FUNCTION audit_document_changes()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -90,10 +53,8 @@ DECLARE
     action_type TEXT;
     doc_title TEXT;
 BEGIN
-    -- Read the UUID from Supabase's context securely
     current_uid := auth.uid();
 
-    -- Find our internal integer ID matching the google_id
     IF current_uid IS NOT NULL THEN
         SELECT id INTO internal_user_id FROM users WHERE google_id = current_uid::text;
     END IF;
@@ -104,15 +65,14 @@ BEGIN
         INSERT INTO audit_logs (user_id, doc_id, action, details)
         VALUES (internal_user_id, NEW.id, action_type, 'Uploaded ' || doc_title || ' [' || NEW.access_level || ']');
         RETURN NEW;
-        
+
     ELSIF TG_OP = 'DELETE' THEN
         action_type := 'DELETE';
-        doc_title := OLD.title;
         INSERT INTO audit_logs (user_id, doc_id, action, details)
         VALUES (internal_user_id, null, action_type, 'Document ' || OLD.id || ' deleted');
         RETURN OLD;
     END IF;
-    
+
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -120,66 +80,92 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 DROP TRIGGER IF EXISTS trigger_audit_document_changes ON documents;
 CREATE TRIGGER trigger_audit_document_changes
 AFTER INSERT OR DELETE ON documents
-FOR EACH ROW
-EXECUTE FUNCTION audit_document_changes();
+FOR EACH ROW EXECUTE FUNCTION audit_document_changes();
+```
 
--- ==========================================
--- 3. Automatic Document Expiry (pg_cron)
--- ==========================================
--- Enable pg_cron if not already enabled
+### Notification fan-out
+
+A trigger on `document_tags` fires `AFTER INSERT` and pushes notification rows to `notifications` only for users who have access to the document, based on `access_level` and `document_departments`.
+
+---
+
+## Row-Level Security
+
+RLS is enabled on every table. Policies evaluate at query time using the JWT claims from the authenticated session — `auth.uid()` and the user's decoded role/department.
+
+**Key patterns:**
+
+- **Data isolation** — `SELECT` on `documents` is filtered by the user's department membership in `document_departments`, or by `is_general = TRUE`, or by `uploader_id = auth.uid()`. No cross-department leakage.
+- **RBAC** — Admin-only operations check that the executing user's `role_id` maps to `access_level >= 10`.
+- **Audit immutability** — `audit_logs` has no `UPDATE` or `DELETE` policy. Rows are write-once via the trigger's `SECURITY DEFINER` function.
+
+---
+
+## Automated Jobs (`pg_cron`)
+
+```sql
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
--- Remove existing schedule if trying to replace it
+-- Sweep expired documents every hour
 SELECT cron.unschedule('delete-expired-documents');
-
--- Schedule a sweep every hour (Minute 0)
 SELECT cron.schedule(
   'delete-expired-documents',
   '0 * * * *',
   $$ DELETE FROM documents WHERE expiry_date < NOW(); $$
 );
 
--- Note: Deleting the Postgres row using pg_cron will not automatically 
--- delete the actual file in Supabase Storage. You should configure a 
--- Storage webhook or Edge Function if physical deletion is strictly required.
+-- Purge old notifications after 7 days
+SELECT cron.unschedule('delete-old-notifications');
+SELECT cron.schedule(
+  'delete-old-notifications',
+  '0 0 * * *',
+  $$ DELETE FROM notifications WHERE created_at < NOW() - INTERVAL '7 days'; $$
+);
 ```
 
-## 8. AI Summarization Pipeline
+> **Note:** `pg_cron` deletes the `documents` row but does not remove the file from Supabase Storage. Configure a Storage webhook or a separate Edge Function if physical file deletion is required.
 
-LexDoc AI generates document summaries using an OpenRouter-powered Edge Function with a prioritized free-model fallback chain.
+Default document expiry if not specified by the uploader: **150 days** (set in the upload Edge Function).
 
-### 8.1. `ai_cache` Table
-A dedicated caching table ensures that repeated summary requests for the same document don't hit external APIs:
-- **Schema**: `id` (PK), `doc_id` (UNIQUE FK→documents), `summary_text`, `model_used`, `created_at`, `updated_at`
-- **RLS**: Authenticated users can SELECT; service_role has full access.
-- Cache is checked before every AI request. If a cached entry exists and `force_regenerate` is not set, the cached summary is returned instantly.
+---
 
-### 8.2. Edge Function: `generate-summary`
-Deployed as a Supabase Edge Function (Deno runtime), invoked via `supabase.functions.invoke()`.
+## Edge Function: `generate-summary`
 
-**Model Priority Chain:**
-1. `arcee-ai/trinity-large-preview:free` (Default primary model for high-quality summarization)
-2. `google/gemini-2.0-flash:free` (fast fallback)
+Deployed to Supabase as a Deno runtime function. Invoked explicitly by the frontend via `supabase.functions.invoke()`.
+
+**Model fallback chain:**
+
+1. `arcee-ai/trinity-large-preview:free`
+2. `google/gemini-2.0-flash:free`
 3. `meta-llama/llama-3.3-70b:free`
 4. `deepseek/deepseek-chat:free`
 
-**Document Extraction Strategy:**
-- Text extraction for standard generic documents is directly delegated to the cloud-based **LlamaParse API**.
-- If a PDF resists LlamaParse extraction (returns insufficient text < 50 chars), it automatically falls back to **OCR.space API**.
-- For deeply structured Word documents, a dedicated `parse-docx` Edge Function utilizing `mammoth` and `cheerio` efficiently converts binary DOCX buffers into highly structured HTML and arrays of sections to maintain heading hierarchies natively without AI prompting overhead.
+Models are tried sequentially. Each call has a 45-second `AbortController` timeout. The chain stops at the first valid response (non-empty, >20 chars).
 
-**Optimization Strategy:**
-- **Sequential Fallback Loop**: To ensure maximum reliability and cost-efficiency without rate-limiting, models are queried sequentially. If the default Arcee model fails or times out, the system automatically catches the error and instantaneously queries the next available model in the array (Gemini 2.0).
-- **Timeout Control**: Each model request has an enforced `MODEL_TIMEOUT_MS` cutoff (45 seconds) via `AbortController` to prevent hanging edge functions and minimize compute billing.
-- **Response Validation**: AI output must be non-empty and >20 characters.
+**Extraction strategy:**
 
-**Data Flow:**
-1. Frontend invokes edge function with `{ doc_id, force_regenerate }`
-2. Edge function checks `ai_cache` → returns immediately if cached
-3. Downloads document from Supabase Storage, extracts text
-4. Runs through model chain until a valid response is received
-5. On success: `UPSERT` into `ai_cache`, `INSERT` into `summaries`, `UPDATE documents.processing_status = 'summarized'`
-6. On failure: `UPDATE documents.processing_status = 'failed'`
+- Standard PDFs → LlamaParse API (cloud OCR + markdown extraction)
+- PDFs that return <50 chars from LlamaParse → OCR.space API
+- DOCX files → `parse-docx` Edge Function (`mammoth` DOCX→HTML, `cheerio` for structure)
 
-### 8.3. `summaries` Table Integration
-The existing `summaries` table (`id`, `doc_id`, `content`, `model_used`, `created_at`) stores every generated summary. The `model_used` column tracks which AI model produced the result for audit purposes.
+**Data flow:**
+
+1. Frontend calls `generate-summary` with `{ doc_id, force_regenerate? }`
+2. Check `ai_cache` — return immediately on cache hit (unless `force_regenerate`)
+3. Download file from Supabase Storage
+4. Extract text via LlamaParse → OCR.space → `parse-docx` as appropriate
+5. Run model chain until a valid summary is produced
+6. `UPSERT` into `ai_cache`, `INSERT` into `summaries`, `UPDATE documents.processing_status = 'summarized'`
+7. On total failure: `UPDATE documents.processing_status = 'failed'`
+
+---
+
+## `ai_cache` Table
+
+Prevents redundant API calls for the same document:
+
+```
+ai_cache → id, doc_id (UNIQUE FK), summary_text, model_used, created_at, updated_at
+```
+
+RLS: authenticated users can `SELECT`; `service_role` has full access (used by the Edge Function).

@@ -1,259 +1,196 @@
-# LexDoc AI – Optimized Database Schema & Architecture (College System)
+# Database Schema Reference
 
-## 1. Architecture Overview
-- **Frontend:** React + GSAP animations
-- **Backend / Serverless:** Supabase Edge Functions (Deno)
-- **Database:** PostgreSQL (managed by Supabase)
-- **AI Service:** OpenRouter (Arcee AI: Trinity Large Preview & Gemini 2.0 Flash) & LlamaParse API
-
-## 2. Authentication Logic
-The system uses a hybrid authentication model:
-1. First login requires Google authentication.
-2. Email domain must match company domain (example: `@sahrdaya.ac.in`).
-3. After verification user sets username + password.
-4. Future logins use username/password only. (The `google_id` prevents duplicate accounts during OAuth verification.)
-
-## 3. Relational Database Schema
-The database follows a relational model mapping exactly to the requirements.
-
-### Core Tables
-
-#### 1. departments
-Defines the organizational structure. Every user belongs to exactly one department.
-| Column | Type | Description |
-| --- | --- | --- |
-| `id` | PK | Department ID |
-| `name` | TEXT | Department name |
-| `code` | TEXT | Short identifier (CS, EC, BT, EEE, BME, CE) |
-
-#### 2. roles
-Defines role hierarchy and permission levels. Enabled for fast permission comparison inside backend logic.
-| Column | Type | Description |
-| --- | --- | --- |
-| `id` | PK | Role ID |
-| `name` | TEXT | Admin / HOD / Teacher / Student |
-| `access_level` | INTEGER | Numeric hierarchy: Admin=10, HOD=7, Teacher=5, Student=1 |
-
-#### 3. users
-Application users.
-| Column | Type | Description |
-| --- | --- | --- |
-| `id` | PK | User ID |
-| `username` | TEXT UNIQUE | Username |
-| `email` | TEXT UNIQUE | Email |
-| `password_hash` | TEXT | Encrypted Password |
-| `google_id` | TEXT | Google OAuth ID |
-| `is_verified` | BOOLEAN | Verification status |
-| `role_id` | FK | references `roles.id` |
-| `dept_id` | FK | references `departments.id` |
-| `created_at` | TIMESTAMP | Creation time |
-
-#### 4. tags
-Unified tagging system. Types: `PRIORITY` (High/Medium/Low with weight for sorting), `LABEL` (seeded named labels like Urgent/General), `CUSTOM` (user-created tags, stored lowercase for deduplication).
-| Column | Type | Description |
-| --- | --- | --- |
-| `id` | PK | Tag ID |
-| `name` | TEXT UNIQUE(ilike) | Tag name (case-insensitive unique via index on lower(name)) |
-| `type` | TEXT | `PRIORITY`, `LABEL`, or `CUSTOM` |
-| `weight` | INTEGER | Tag weight for sorting |
-| `color` | TEXT | UI Color |
-
-#### 5. documents
-Stores document metadata, sensitivity level, and expiry.
-| Column | Type | Description |
-| --- | --- | --- |
-| `id` | PK | Document ID |
-| `title` | TEXT | Document Title |
-| `storage_bucket`| TEXT | Bucket |
-| `storage_path` | TEXT | Path in bucket |
-| `file_size` | INTEGER | Size in bytes |
-| `mime_type` | TEXT | File type |
-| `checksum` | TEXT | Hash |
-| `processing_status`| TEXT | `uploaded`, `processing`, `summarized`, `failed` |
-| `is_general` | BOOLEAN | Global visibility |
-| `access_level` | TEXT | `PUBLIC`, `STUDENT`, `STAFF`, `CONFIDENTIAL`, `PRIVATE` |
-| `expiry_date` | TIMESTAMP | Auto-delete date (NULL = permanent) |
-| `uploader_id` | FK | references `users.id` |
-| `uploaded_at` | TIMESTAMP | Upload time |
-
-#### 6. document_departments
-Controls document visibility between departments. (Composite PK: `doc_id`, `dept_id`)
-| Column | Type |
-| --- | --- |
-| `doc_id` | FK |
-| `dept_id` | FK |
-
-#### 7. document_tags
-Junction table: associates documents with tags (both preset PRIORITY/LABEL and user-created CUSTOM). **This is NOT a duplicate of `tags`** — it is the Many-to-Many link table between `documents` and `tags`. (Composite PK: `doc_id`, `tag_id`)
-| Column | Type |
-| --- | --- |
-| `doc_id` | FK |
-| `tag_id` | FK |
-
-#### 8. summaries
-Stores AI generated summaries separately from documents. Allows re-summarization with different models.
-| Column | Type | Description |
-| --- | --- | --- |
-| `id` | PK | Summary ID |
-| `doc_id` | FK | references `documents.id` |
-| `content` | TEXT | Summary content |
-| `model_used` | TEXT | AI Model |
-| `created_at` | TIMESTAMP | Creation time |
-
-#### 9. audit_logs
-Tracks security and system events. Examples: `VIEW_DOCUMENT`, `DELETE_DOCUMENT`, `GENERATE_SUMMARY`, `LOGIN_SUCCESS`.
-| Column | Type | Description |
-| --- | --- | --- |
-| `id` | PK | Log ID |
-| `user_id` | FK | references `users.id` |
-| `doc_id` | FK | references `documents.id` |
-| `action` | TEXT | Action type |
-| `details` | TEXT | Event Details |
-| `timestamp` | TIMESTAMP | Event timestamp |
-
-#### 10. events
-AI-extracted meetings and deadlines from documents.
-| Column | Type | Description |
-| --- | --- | --- |
-| `id` | PK | Event ID |
-| `doc_id` | FK | references `documents.id` |
-| `title` | TEXT | Event title |
-| `event_type` | TEXT | `DEADLINE`, `MEETING`, `EXAM`, `EVENT`, `RANGE` |
-| `event_date` | DATE | Date of event (nullable for RANGE events) |
-| `event_time` | TIME | Time of event |
-| `description` | TEXT | Event description |
-| `created_by_ai` | BOOLEAN | Whether AI-extracted |
-| `created_at` | TIMESTAMP | Creation time |
-| `start_date` | DATE | Start date for RANGE events |
-| `end_date` | DATE | End date for RANGE events |
-
-#### 11. notifications
-Reminder system for upcoming events.
-| Column | Type | Description |
-| --- | --- | --- |
-| `id` | PK | Notification ID |
-| `user_id` | FK | references `users.id` |
-| `event_id` | FK | references `events.id` |
-| `notify_at` | TIMESTAMP | When to notify |
-| `is_sent` | BOOLEAN | Delivery status |
+Full DDL for the LexDoc AI PostgreSQL database. Run in the Supabase SQL editor in the order listed below.
 
 ---
 
-## 4. Access Control Logic
+## Tables
 
-1. **Admin**: Full system access.
-2. **Uploader**: Always has access to their documents.
-3. **Global**: If `documents.is_general = TRUE` Then Accessible to all users.
-4. **Departmental**: Otherwise, access granted only if user's department exists in `document_departments`.
+### `departments`
 
----
-
-## 5. SQL Table Creation (DDL)
+Organizational units. Every user belongs to exactly one department.
 
 ```sql
 CREATE TABLE departments (
- id SERIAL PRIMARY KEY,
- name TEXT NOT NULL,
- code TEXT UNIQUE
+  id   SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  code TEXT UNIQUE   -- CS, EC, BT, EEE, BME, CE
 );
+```
 
+### `roles`
+
+Defines the RBAC hierarchy used in RLS policies.
+
+| `name` | `access_level` |
+|---|---|
+| Admin | 10 |
+| HOD | 7 |
+| Teacher | 5 |
+| Student | 1 |
+
+```sql
 CREATE TABLE roles (
- id SERIAL PRIMARY KEY,
- name TEXT NOT NULL,
- access_level INTEGER
+  id           SERIAL PRIMARY KEY,
+  name         TEXT NOT NULL,
+  access_level INTEGER
 );
+```
 
+### `users`
+
+```sql
 CREATE TABLE users (
- id SERIAL PRIMARY KEY,
- username TEXT UNIQUE,
- email TEXT UNIQUE,
- password_hash TEXT,
- google_id TEXT,
- is_verified BOOLEAN DEFAULT FALSE,
- role_id INTEGER REFERENCES roles(id),
- dept_id INTEGER REFERENCES departments(id),
- created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id            SERIAL PRIMARY KEY,
+  username      TEXT UNIQUE,
+  email         TEXT UNIQUE,
+  password_hash TEXT,
+  google_id     TEXT,
+  is_verified   BOOLEAN DEFAULT FALSE,
+  role_id       INTEGER REFERENCES roles(id),
+  dept_id       INTEGER REFERENCES departments(id),
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+```
 
+**Auth flow:** First login goes through Google OAuth; email domain is validated against `@sahrdaya.ac.in`. On first login the user completes account setup (username + password). `google_id` prevents duplicate OAuth accounts on subsequent logins.
+
+### `documents`
+
+```sql
 CREATE TABLE documents (
- id SERIAL PRIMARY KEY,
- title TEXT,
- storage_bucket TEXT,
- storage_path TEXT,
- file_size INTEGER,
- mime_type TEXT,
- checksum TEXT,
- processing_status TEXT CHECK (processing_status IN ('uploaded', 'processing', 'summarized', 'failed')),
- is_general BOOLEAN DEFAULT FALSE,
- uploader_id INTEGER REFERENCES users(id),
- uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id                SERIAL PRIMARY KEY,
+  title             TEXT,
+  storage_bucket    TEXT,
+  storage_path      TEXT,
+  file_size         INTEGER,
+  mime_type         TEXT,
+  checksum          TEXT,
+  processing_status TEXT CHECK (processing_status IN ('uploaded', 'processing', 'summarized', 'failed')),
+  is_general        BOOLEAN DEFAULT FALSE,
+  access_level      TEXT CHECK (access_level IN ('PUBLIC', 'STUDENT', 'STAFF', 'CONFIDENTIAL', 'PRIVATE')),
+  expiry_date       TIMESTAMP,   -- NULL = permanent; default = 150 days from upload
+  uploader_id       INTEGER REFERENCES users(id),
+  uploaded_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+```
 
-CREATE TABLE document_departments (
- doc_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
- dept_id INTEGER REFERENCES departments(id) ON DELETE CASCADE,
- PRIMARY KEY (doc_id, dept_id)
-);
+### `tags`
 
+Unified tagging system with three tag types:
+
+- `PRIORITY` — High / Medium / Low with numeric weight for sort order
+- `LABEL` — Seeded named labels (Urgent, General, …)
+- `CUSTOM` — User-created, stored lowercase for deduplication
+
+```sql
 CREATE TABLE tags (
- id SERIAL PRIMARY KEY,
- name TEXT NOT NULL,
- type TEXT CHECK (type IN ('PRIORITY', 'LABEL', 'CUSTOM')),
- weight INTEGER,
- color TEXT
+  id     SERIAL PRIMARY KEY,
+  name   TEXT NOT NULL,
+  type   TEXT CHECK (type IN ('PRIORITY', 'LABEL', 'CUSTOM')),
+  weight INTEGER,
+  color  TEXT
 );
--- Case-insensitive uniqueness to prevent duplicate custom tags
+
+-- Prevents duplicate custom tags regardless of case
 CREATE UNIQUE INDEX idx_tags_name_lower ON tags (lower(name));
+```
+
+### Junction tables
+
+```sql
+CREATE TABLE document_departments (
+  doc_id  INTEGER REFERENCES documents(id) ON DELETE CASCADE,
+  dept_id INTEGER REFERENCES departments(id) ON DELETE CASCADE,
+  PRIMARY KEY (doc_id, dept_id)
+);
 
 CREATE TABLE document_tags (
- doc_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
- tag_id INTEGER REFERENCES tags(id) ON DELETE CASCADE,
- PRIMARY KEY (doc_id, tag_id)
+  doc_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
+  tag_id INTEGER REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (doc_id, tag_id)
 );
+```
 
+### `summaries`
+
+Stores every generated summary independently from `documents`. Allows re-summarization with a different model.
+
+```sql
 CREATE TABLE summaries (
- id SERIAL PRIMARY KEY,
- doc_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
- content TEXT NOT NULL,
- model_used TEXT,
- created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id         SERIAL PRIMARY KEY,
+  doc_id     INTEGER REFERENCES documents(id) ON DELETE CASCADE,
+  content    TEXT NOT NULL,
+  model_used TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+```
 
-CREATE TABLE audit_logs (
- id SERIAL PRIMARY KEY,
- user_id INTEGER REFERENCES users(id),
- doc_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
- action TEXT NOT NULL,
- details TEXT,
- timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+### `ai_cache`
+
+Caches the most recent summary per document. Checked before every OpenRouter API call.
+
+```sql
+CREATE TABLE ai_cache (
+  id           SERIAL PRIMARY KEY,
+  doc_id       INTEGER UNIQUE REFERENCES documents(id) ON DELETE CASCADE,
+  summary_text TEXT,
+  model_used   TEXT,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+```
 
+### `events`
+
+AI-extracted deadlines, meetings, and date ranges from document content.
+
+```sql
 CREATE TABLE events (
- id SERIAL PRIMARY KEY,
- doc_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
- title TEXT NOT NULL,
- event_type TEXT CHECK (event_type IN ('DEADLINE', 'MEETING', 'EXAM', 'EVENT', 'RANGE')),
- event_date DATE,
- event_time TIME,
- description TEXT,
- created_by_ai BOOLEAN DEFAULT TRUE,
- created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
- start_date DATE,
- end_date DATE
+  id           SERIAL PRIMARY KEY,
+  doc_id       INTEGER REFERENCES documents(id) ON DELETE CASCADE,
+  title        TEXT NOT NULL,
+  event_type   TEXT CHECK (event_type IN ('DEADLINE', 'MEETING', 'EXAM', 'EVENT', 'RANGE')),
+  event_date   DATE,
+  event_time   TIME,
+  description  TEXT,
+  created_by_ai BOOLEAN DEFAULT TRUE,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  start_date   DATE,   -- for RANGE events
+  end_date     DATE
 );
+```
 
+### `notifications`
+
+```sql
 CREATE TABLE notifications (
- id SERIAL PRIMARY KEY,
- user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
- event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
- notify_at TIMESTAMP NOT NULL,
- is_sent BOOLEAN DEFAULT FALSE
+  id        SERIAL PRIMARY KEY,
+  user_id   INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  event_id  INTEGER REFERENCES events(id) ON DELETE CASCADE,
+  notify_at TIMESTAMP NOT NULL,
+  is_sent   BOOLEAN DEFAULT FALSE
+);
+```
+
+### `audit_logs`
+
+Write-once. No `UPDATE` or `DELETE` RLS policy. Populated exclusively by the `audit_document_changes` trigger.
+
+```sql
+CREATE TABLE audit_logs (
+  id        SERIAL PRIMARY KEY,
+  user_id   INTEGER REFERENCES users(id),
+  doc_id    INTEGER REFERENCES documents(id) ON DELETE CASCADE,
+  action    TEXT NOT NULL,
+  details   TEXT,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
 ---
 
-## 6. Performance Optimizations (Indexes)
+## Indexes
 
 ```sql
 -- Documents
@@ -261,10 +198,12 @@ CREATE INDEX IF NOT EXISTS idx_documents_uploaded_at       ON documents(uploaded
 CREATE INDEX IF NOT EXISTS idx_documents_uploader_id       ON documents(uploader_id);
 CREATE INDEX IF NOT EXISTS idx_documents_access_level      ON documents(access_level);
 CREATE INDEX IF NOT EXISTS idx_documents_is_general        ON documents(is_general);
--- Tags & Junctions
+
+-- Tags & junctions
 CREATE INDEX IF NOT EXISTS idx_document_tags_doc_id        ON document_tags(doc_id);
 CREATE INDEX IF NOT EXISTS idx_document_tags_tag_id        ON document_tags(tag_id);
 CREATE INDEX IF NOT EXISTS idx_document_departments_doc_id ON document_departments(doc_id);
+
 -- Supporting tables
 CREATE INDEX IF NOT EXISTS idx_summaries_doc_id            ON summaries(doc_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id          ON audit_logs(user_id);
@@ -278,20 +217,21 @@ CREATE INDEX IF NOT EXISTS idx_users_dept_id               ON users(dept_id);
 
 ---
 
-## 7. AI Processing Architecture Workflow
-The AI service runs entirely on a serverless Edge Function hosted by Supabase (`generate-summary`).
-1. **Document uploaded** (to Supabase Storage)
-2. **Edge Function Triggered** (by frontend explicit call)
-3. **Extraction**: File is routed to **LlamaParse API** for pristine markdown extraction (OCR.space fallback for difficult PDFs).
-4. **Summary Generation**: Text is sent to the **OpenRouter API** using a sequential fallback array (defaulting to Arcee AI: Trinity Large Preview) for summarization.
-5. **Event Extraction**: Upon successful summarization, text is sent sequentially to extract actionable deadlines, exams, and ranges using deterministic TypeScript parsing over LLM outputs.
-6. **Stored**: Cache and results are written to `summaries`, `events`, and `ai_cache` tables.
+## Access Control Logic
+
+RLS policies implement the following visibility rules for `documents`:
+
+1. **Admin** (`access_level = 10`) — full access to all documents.
+2. **Uploader** — always has access to their own documents (`uploader_id = auth.uid()`).
+3. **Global** — if `is_general = TRUE`, visible to all authenticated users.
+4. **Departmental** — otherwise, access is granted only if the user's department exists in `document_departments`.
 
 ---
 
-## 8. Sample Queries
+## Useful Queries
 
-**Retrieve Documents Visible to User:**
+**Documents visible to a user:**
+
 ```sql
 SELECT *
 FROM documents d
@@ -304,9 +244,11 @@ WHERE
   );
 ```
 
-**Get Document Summary:**
+**Latest summary for a document:**
+
 ```sql
-SELECT content FROM summaries
+SELECT content, model_used FROM summaries
 WHERE doc_id = :doc_id
-ORDER BY created_at DESC LIMIT 1;
+ORDER BY created_at DESC
+LIMIT 1;
 ```
